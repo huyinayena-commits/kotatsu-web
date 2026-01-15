@@ -54,13 +54,24 @@ export async function GET(request: Request) {
             // Extract authors
             const authors = item.taxonomy?.Author?.map((a: { name: string }) => a.name) || [];
 
+            // Build proper cover URL
+            let coverUrl = item.cover_image_url || '';
+            if (coverUrl && !coverUrl.startsWith('http')) {
+                coverUrl = `${CDN_URL}/${coverUrl.replace(/^\/+/, '')}`;
+            }
+
+            let largeCoverUrl = item.cover_portrait_url || null;
+            if (largeCoverUrl && !largeCoverUrl.startsWith('http')) {
+                largeCoverUrl = `${CDN_URL}/${largeCoverUrl.replace(/^\/+/, '')}`;
+            }
+
             return {
                 source: "Shinigami",
                 id: item.manga_id,
                 title: item.title,
                 altTitle: item.alternative_title || null,
-                cover: item.cover_image_url || "",
-                largeCover: item.cover_portrait_url || null,
+                cover: coverUrl,
+                largeCover: largeCoverUrl,
                 description: item.description || null,
                 status,
                 genres,

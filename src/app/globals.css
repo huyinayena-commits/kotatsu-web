@@ -1,38 +1,259 @@
 @import "tailwindcss";
 
+/* ============================================
+   KOTATSU WEB - Design System
+   Based on Kotatsu Android Theme (Material 3)
+   ============================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ===================
+     KOTATSU COLORS (from colors_kotatsu.xml - Dark Theme)
+     =================== */
+
+  /* Primary - Blue accent */
+  --kotatsu-primary: #ABC7FF;
+  --kotatsu-primary-container: #00458F;
+  --kotatsu-on-primary: #002F65;
+  --kotatsu-on-primary-container: #D7E3FF;
+  --kotatsu-inverse-primary: #205DAF;
+
+  /* Secondary - Blue-gray */
+  --kotatsu-secondary: #BEC6DC;
+  --kotatsu-secondary-container: #3E4759;
+  --kotatsu-on-secondary: #283041;
+  --kotatsu-on-secondary-container: #DAE2F9;
+
+  /* Tertiary - Purple/Pink */
+  --kotatsu-tertiary: #DDBCE0;
+  --kotatsu-tertiary-container: #573E5C;
+  --kotatsu-on-tertiary: #3F2844;
+  --kotatsu-on-tertiary-container: #FAD8FD;
+
+  /* Surface colors */
+  --kotatsu-surface: #121316;
+  --kotatsu-surface-dim: #121316;
+  --kotatsu-surface-bright: #38393C;
+  --kotatsu-surface-container-lowest: #0D0E11;
+  --kotatsu-surface-container-low: #1A1B1F;
+  --kotatsu-surface-container: #1F1F23;
+  --kotatsu-surface-container-high: #292A2D;
+  --kotatsu-surface-container-highest: #343538;
+  --kotatsu-surface-variant: #44474E;
+  --kotatsu-on-surface: #C7C6CA;
+  --kotatsu-on-surface-variant: #C4C6D0;
+  --kotatsu-inverse-surface: #E3E2E6;
+  --kotatsu-inverse-on-surface: #1A1B1F;
+  --kotatsu-background: #1A1B1F;
+  --kotatsu-outline: #8E9099;
+
+  /* Status Colors */
+  --kotatsu-error: #FFB4A9;
+  --kotatsu-error-container: #930006;
+  --kotatsu-on-error: #680003;
+  --kotatsu-warning: #FB8C00;
+  --kotatsu-success: #81C784;
+  --kotatsu-success-dim: #4CAF50;
+
+  /* ===================
+     SEMANTIC ALIASES (for easier usage)
+     =================== */
+
+  /* Background Colors */
+  --bg-primary: var(--kotatsu-background);
+  --bg-secondary: var(--kotatsu-surface-container-low);
+  --bg-surface: var(--kotatsu-surface-container);
+  --bg-elevated: var(--kotatsu-surface-container-high);
+  --bg-card: var(--kotatsu-surface-container);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+
+  /* Text Colors */
+  --text-primary: var(--kotatsu-on-surface);
+  --text-secondary: var(--kotatsu-on-surface-variant);
+  --text-muted: var(--kotatsu-outline);
+  --text-on-primary: var(--kotatsu-on-primary);
+
+  /* Accent Colors */
+  --accent-primary: var(--kotatsu-primary);
+  --accent-primary-container: var(--kotatsu-primary-container);
+  --accent-secondary: var(--kotatsu-secondary);
+  --accent-tertiary: var(--kotatsu-tertiary);
+  --accent-success: var(--kotatsu-success);
+  --accent-warning: var(--kotatsu-warning);
+  --accent-error: var(--kotatsu-error);
+
+  /* Border Colors */
+  --border-default: var(--kotatsu-surface-variant);
+  --border-subtle: var(--kotatsu-surface-container-high);
+  --border-active: var(--kotatsu-primary);
+
+  /* ===================
+     LAYOUT
+     =================== */
+  --nav-height: 56px;
+  --sidebar-width: 72px;
+  --sidebar-expanded: 240px;
+  --header-height: 56px;
+  --content-max-width: 1280px;
+
+  /* ===================
+     SPACING (4px base)
+     =================== */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ===================
+     TYPOGRAPHY
+     =================== */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Font sizes (Material Design type scale) */
+  --text-display-large: 57px;
+  --text-display-medium: 45px;
+  --text-display-small: 36px;
+  --text-headline-large: 32px;
+  --text-headline-medium: 28px;
+  --text-headline-small: 24px;
+  --text-title-large: 22px;
+  --text-title-medium: 16px;
+  --text-title-small: 14px;
+  --text-body-large: 16px;
+  --text-body-medium: 14px;
+  --text-body-small: 12px;
+  --text-label-large: 14px;
+  --text-label-medium: 12px;
+  --text-label-small: 11px;
+
+  /* Font weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Line heights */
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* ===================
+     BORDER RADIUS (Material Design)
+     =================== */
+  --radius-none: 0;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ===================
+     SHADOWS (Material Design elevation)
+     =================== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.3), 0 16px 32px rgba(0, 0, 0, 0.2);
+
+  /* ===================
+     TRANSITIONS
+     =================== */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ===================
+     Z-INDEX LAYERS
+     =================== */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-drawer: 40;
+  --z-nav: 50;
+  --z-modal: 100;
+  --z-toast: 150;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-family);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ============================================
+   BASE STYLES
+   ============================================ */
 
 html {
   scroll-behavior: smooth;
+  font-size: 16px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--text-body-medium);
+  line-height: var(--leading-normal);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth scrollbar styling for manga reader */
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+.text-display {
+  font-size: var(--text-display-small);
+  font-weight: var(--font-bold);
+}
+
+.text-headline {
+  font-size: var(--text-headline-small);
+  font-weight: var(--font-semibold);
+}
+
+.text-title {
+  font-size: var(--text-title-medium);
+  font-weight: var(--font-medium);
+}
+
+.text-body {
+  font-size: var(--text-body-medium);
+  font-weight: var(--font-regular);
+}
+
+.text-label {
+  font-size: var(--text-label-medium);
+  font-weight: var(--font-medium);
+}
+
+.text-caption {
+  font-size: var(--text-label-small);
+  font-weight: var(--font-regular);
+  color: var(--text-muted);
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.5) transparent;
+  scrollbar-color: var(--kotatsu-surface-variant) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -45,10 +266,270 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.5);
-  border-radius: 4px;
+  background: var(--kotatsu-surface-variant);
+  border-radius: var(--radius-full);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.7);
+  background: var(--kotatsu-outline);
+}
+
+/* ============================================
+   SELECTION STYLING
+   ============================================ */
+
+::selection {
+  background: var(--kotatsu-primary-container);
+  color: var(--kotatsu-on-primary-container);
+}
+
+/* ============================================
+   FOCUS STATES (Accessibility)
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   LAYOUT UTILITIES
+   ============================================ */
+
+/* Mobile: has bottom nav padding */
+@media (max-width: 1023px) {
+  .main-content {
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Desktop: has sidebar padding */
+@media (min-width: 1024px) {
+  .main-content {
+    padding-left: var(--sidebar-width);
+  }
+
+  .sidebar-expanded .main-content {
+    padding-left: var(--sidebar-expanded);
+  }
+}
+
+/* ============================================
+   COMPONENT UTILITIES
+   ============================================ */
+
+/* Card/Surface base */
+.surface {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.surface-elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* Chip/Badge base */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-label-small);
+  font-weight: var(--font-medium);
+}
+
+.chip-primary {
+  background: var(--kotatsu-primary-container);
+  color: var(--kotatsu-on-primary-container);
+}
+
+.chip-secondary {
+  background: var(--kotatsu-secondary-container);
+  color: var(--kotatsu-on-secondary-container);
+}
+
+.chip-success {
+  background: rgba(129, 199, 132, 0.2);
+  color: var(--kotatsu-success);
+}
+
+.chip-error {
+  background: rgba(255, 180, 169, 0.2);
+  color: var(--kotatsu-error);
+}
+
+/* Button base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-label-large);
+  font-weight: var(--font-medium);
+  transition: all var(--duration-normal) var(--easing-standard);
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  color: var(--kotatsu-on-primary);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-elevated);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn var(--duration-normal) var(--easing-standard);
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp var(--duration-normal) var(--easing-decelerate);
+}
+
+.animate-slideUp {
+  animation: slideUp var(--duration-slow) var(--easing-decelerate);
+}
+
+.animate-slideDown {
+  animation: slideDown var(--duration-slow) var(--easing-decelerate);
+}
+
+.animate-scaleIn {
+  animation: scaleIn var(--duration-normal) var(--easing-decelerate);
+}
+
+.animate-pulse {
+  animation: pulse 2s var(--easing-standard) infinite;
+}
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
+
+.skeleton {
+  background: linear-gradient(90deg,
+      var(--kotatsu-surface-container) 0%,
+      var(--kotatsu-surface-container-high) 50%,
+      var(--kotatsu-surface-container) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }

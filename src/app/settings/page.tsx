@@ -3,6 +3,21 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import {
+    Settings,
+    ChevronLeft,
+    Download,
+    Book,
+    Clock,
+    Folder,
+    Play,
+    Loader2,
+    CheckCircle2,
+    XCircle,
+    Info,
+    AlertTriangle,
+    FileJson
+} from 'lucide-react';
+import {
     getLibrary,
     getHistory,
     MangaBookmark,
@@ -323,89 +338,89 @@ export default function SettingsPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-950 text-white">
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-950 text-white pb-20 lg:pb-0">
             {/* Header */}
             <header className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/50">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link
                             href="/"
-                            className="text-gray-400 hover:text-white transition-colors"
+                            className="text-gray-400 hover:text-white transition-colors flex items-center gap-1"
                         >
-                            ← Kembali
+                            <ChevronLeft size={20} /> Kembali
                         </Link>
-                        <h1 className="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                            ⚙️ Pengaturan
+                        <h1 className="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
+                            <Settings className="text-orange-500" /> Pengaturan
                         </h1>
                     </div>
                 </div>
             </header>
 
-            <div className="container mx-auto px-4 py-8 max-w-2xl">
+            <div className="container mx-auto px-4 py-8 max-w-2xl animate-fadeIn">
                 {/* Import Section */}
-                <section className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6 mb-6">
-                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        📥 Import Backup Kotatsu
+                <section className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6 mb-6 shadow-xl">
+                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-white">
+                        <Download className="text-amber-500" /> Import Backup Kotatsu
                     </h2>
                     <p className="text-gray-400 text-sm mb-6">
                         Import data dari file backup Kotatsu (extract dari file .bk.zip).
-                        Upload file <code className="bg-gray-700 px-1 rounded">favourites</code> dan/atau{' '}
-                        <code className="bg-gray-700 px-1 rounded">history</code>.
+                        Upload file <code className="bg-gray-700 px-1 rounded mx-1 text-white">favourites</code> dan/atau{' '}
+                        <code className="bg-gray-700 px-1 rounded mx-1 text-white">history</code>.
                     </p>
 
                     {/* Favourites File Input */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            📚 File Favourites (Library)
+                    <div className="mb-4 group">
+                        <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2 group-hover:text-amber-400 transition-colors">
+                            <Book size={16} /> File Favourites (Library)
                         </label>
                         <input
                             ref={favouritesInputRef}
                             type="file"
                             accept=".json,application/json"
                             onChange={(e) => handleFileSelect('favourites', e.target.files?.[0] || null)}
-                            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-600 file:text-white file:font-medium file:cursor-pointer hover:file:bg-amber-500 transition-colors"
+                            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-600 file:text-white file:font-medium file:cursor-pointer hover:file:bg-amber-500 transition-colors cursor-pointer"
                         />
                         {selectedFiles.favourites && (
-                            <p className="text-sm text-green-400 mt-1">
-                                ✅ {selectedFiles.favourites.name}
+                            <p className="text-sm text-green-400 mt-1 flex items-center gap-1 animate-fadeIn">
+                                <CheckCircle2 size={14} /> {selectedFiles.favourites.name}
                             </p>
                         )}
                     </div>
 
                     {/* History File Input */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            📖 File History
+                    <div className="mb-4 group">
+                        <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2 group-hover:text-amber-400 transition-colors">
+                            <Clock size={16} /> File History
                         </label>
                         <input
                             ref={historyInputRef}
                             type="file"
                             accept=".json,application/json"
                             onChange={(e) => handleFileSelect('history', e.target.files?.[0] || null)}
-                            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-600 file:text-white file:font-medium file:cursor-pointer hover:file:bg-amber-500 transition-colors"
+                            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-600 file:text-white file:font-medium file:cursor-pointer hover:file:bg-amber-500 transition-colors cursor-pointer"
                         />
                         {selectedFiles.history && (
-                            <p className="text-sm text-green-400 mt-1">
-                                ✅ {selectedFiles.history.name}
+                            <p className="text-sm text-green-400 mt-1 flex items-center gap-1 animate-fadeIn">
+                                <CheckCircle2 size={14} /> {selectedFiles.history.name}
                             </p>
                         )}
                     </div>
 
                     {/* Categories File Input */}
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            📂 File Categories (Opsional)
+                    <div className="mb-6 group">
+                        <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2 group-hover:text-purple-400 transition-colors">
+                            <Folder size={16} /> File Categories (Opsional)
                         </label>
                         <input
                             ref={categoriesInputRef}
                             type="file"
                             accept=".json,application/json"
                             onChange={(e) => handleFileSelect('categories', e.target.files?.[0] || null)}
-                            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:font-medium file:cursor-pointer hover:file:bg-purple-500 transition-colors"
+                            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:font-medium file:cursor-pointer hover:file:bg-purple-500 transition-colors cursor-pointer"
                         />
                         {selectedFiles.categories && (
-                            <p className="text-sm text-green-400 mt-1">
-                                ✅ {selectedFiles.categories.name}
+                            <p className="text-sm text-green-400 mt-1 flex items-center gap-1 animate-fadeIn">
+                                <CheckCircle2 size={14} /> {selectedFiles.categories.name}
                             </p>
                         )}
                         <p className="text-xs text-gray-500 mt-1">
@@ -417,60 +432,67 @@ export default function SettingsPage() {
                     <button
                         onClick={handleImport}
                         disabled={isProcessing || (!selectedFiles.favourites && !selectedFiles.history && !selectedFiles.categories)}
-                        className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl font-semibold text-white hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl font-semibold text-white hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:checkbox-xl hover:-translate-y-0.5 active:translate-y-0"
                     >
                         {isProcessing ? (
                             <>
-                                <span className="animate-spin">⏳</span>
+                                <Loader2 className="animate-spin" size={20} />
                                 Memproses...
                             </>
                         ) : (
                             <>
-                                🚀 Mulai Import
+                                <Play size={20} fill="currentColor" /> Mulai Import
                             </>
                         )}
                     </button>
 
                     {/* Status Display */}
                     {importStatus.type !== 'idle' && (
-                        <div className={`mt-4 p-4 rounded-lg ${importStatus.type === 'success'
+                        <div className={`mt-4 p-4 rounded-lg flex items-start gap-3 animate-scaleIn ${importStatus.type === 'success'
                             ? 'bg-green-900/50 border border-green-700'
                             : importStatus.type === 'error'
                                 ? 'bg-red-900/50 border border-red-700'
                                 : 'bg-gray-700/50 border border-gray-600'
                             }`}>
-                            <p className={`font-medium ${importStatus.type === 'success' ? 'text-green-400' :
-                                importStatus.type === 'error' ? 'text-red-400' : 'text-gray-300'
-                                }`}>
-                                {importStatus.type === 'success' ? '✅' : importStatus.type === 'error' ? '❌' : '⏳'}{' '}
-                                {importStatus.message}
-                            </p>
+                            <div className="flex-shrink-0 mt-0.5">
+                                {importStatus.type === 'success' ? <CheckCircle2 size={20} className="text-green-400" /> :
+                                    importStatus.type === 'error' ? <XCircle size={20} className="text-red-400" /> :
+                                        <Loader2 size={20} className="animate-spin text-gray-300" />}
+                            </div>
+                            <div className="flex-grow">
+                                <p className={`font-medium ${importStatus.type === 'success' ? 'text-green-400' :
+                                    importStatus.type === 'error' ? 'text-red-400' : 'text-gray-300'
+                                    }`}>
+                                    {importStatus.message}
+                                </p>
 
-                            {importStatus.details && (
-                                <div className="mt-3 text-sm text-gray-300 space-y-1">
-                                    <p>📚 Library: <strong className="text-green-400">{importStatus.details.libraryImported}</strong> ditambahkan, <span className="text-gray-500">{importStatus.details.libraryDuplicates} duplikat dilewati</span></p>
-                                    <p>📖 History: <strong className="text-green-400">{importStatus.details.historyImported}</strong> ditambahkan, <span className="text-gray-500">{importStatus.details.historyDuplicates} duplikat dilewati</span></p>
-                                </div>
-                            )}
+                                {importStatus.details && (
+                                    <div className="mt-3 text-sm text-gray-300 space-y-1">
+                                        <p className="flex items-center gap-2"><Book size={14} className="text-amber-500" /> Library: <strong className="text-green-400">{importStatus.details.libraryImported}</strong> ditambahkan, <span className="text-gray-500">{importStatus.details.libraryDuplicates} duplikat dilewati</span></p>
+                                        <p className="flex items-center gap-2"><Clock size={14} className="text-amber-500" /> History: <strong className="text-green-400">{importStatus.details.historyImported}</strong> ditambahkan, <span className="text-gray-500">{importStatus.details.historyDuplicates} duplikat dilewati</span></p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </section>
 
                 {/* Info Section */}
-                <section className="bg-gray-800/30 rounded-2xl border border-gray-700/30 p-6">
-                    <h3 className="text-sm font-semibold text-gray-400 mb-3">
-                        ℹ️ Cara menggunakan
+                <section className="bg-gray-800/30 rounded-2xl border border-gray-700/30 p-6 animate-fadeInUp">
+                    <h3 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                        <Info size={16} /> Cara menggunakan
                     </h3>
-                    <ol className="text-sm text-gray-500 space-y-2 list-decimal list-inside">
+                    <ol className="text-sm text-gray-500 space-y-3 list-decimal list-inside pl-2">
                         <li>Extract file backup Kotatsu (.bk.zip)</li>
-                        <li>Cari file <code className="bg-gray-700 px-1 rounded text-gray-300">favourites</code> untuk library</li>
-                        <li>Cari file <code className="bg-gray-700 px-1 rounded text-gray-300">history</code> untuk history baca</li>
-                        <li>Cari file <code className="bg-gray-700 px-1 rounded text-gray-300">categories</code> untuk kategori favorit</li>
+                        <li>Cari file <code className="bg-gray-700 px-1.5 py-0.5 rounded text-gray-300 font-mono text-xs">favourites</code> untuk library</li>
+                        <li>Cari file <code className="bg-gray-700 px-1.5 py-0.5 rounded text-gray-300 font-mono text-xs">history</code> untuk history baca</li>
+                        <li>Cari file <code className="bg-gray-700 px-1.5 py-0.5 rounded text-gray-300 font-mono text-xs">categories</code> untuk kategori favorit</li>
                         <li>Upload file-file tersebut di atas</li>
                         <li>Klik "Mulai Import"</li>
                     </ol>
-                    <p className="text-xs text-gray-600 mt-4">
-                        ⚠️ Data yang sudah ada tidak akan ditimpa. Kategori dari Kotatsu akan dijaga terpisah sesuai file aslinya.
+                    <p className="text-xs text-gray-600 mt-4 flex items-start gap-2 bg-gray-800/50 p-3 rounded-lg border border-gray-700/30">
+                        <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                        Data yang sudah ada tidak akan ditimpa. Kategori dari Kotatsu akan dijaga terpisah sesuai file aslinya.
                     </p>
                 </section>
             </div>

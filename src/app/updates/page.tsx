@@ -2,6 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import {
+    Bell,
+    RefreshCw,
+    Heart,
+    CheckCircle2,
+    Megaphone,
+    BookOpen,
+    Info,
+    ArrowRight,
+    Loader2
+} from 'lucide-react';
 import { getLibrary, getHistory, type MangaBookmark, type ReadingHistory } from '@/lib/storage';
 
 interface ChapterUpdate {
@@ -15,17 +26,15 @@ interface ChapterUpdate {
     lastChecked: number;
 }
 
-// Simulated function to check for updates (in real implementation, this would call the API)
 async function checkMangaForUpdates(manga: MangaBookmark, lastRead?: ReadingHistory): Promise<ChapterUpdate | null> {
     try {
-        // Fetch manga details to get latest chapter
-        const response = await fetch(`/api/sources/${manga.source}/manga/${manga.id}`);
+        const response = await fetch(`/api/sources/${manga.source}/${manga.id}`);
         if (!response.ok) return null;
 
         const data = await response.json();
         if (!data.success || !data.data) return null;
 
-        const latestChapter = data.data.chapters?.[0]?.number || 0;
+        const latestChapter = data.data.chapters?.[data.data.chapters.length - 1]?.number || 0;
         const lastReadChapter = lastRead?.chapterNumber || 0;
 
         if (latestChapter > lastReadChapter) {
@@ -36,7 +45,7 @@ async function checkMangaForUpdates(manga: MangaBookmark, lastRead?: ReadingHist
                 source: manga.source,
                 latestChapter,
                 lastReadChapter,
-                newChaptersCount: latestChapter - lastReadChapter,
+                newChaptersCount: Math.floor(latestChapter - lastReadChapter),
                 lastChecked: Date.now(),
             };
         }
@@ -62,13 +71,10 @@ export default function UpdatesPage() {
         setLibrary(lib);
         setHistory(hist);
 
-        // Load cached updates
         const cachedUpdates = localStorage.getItem('kotatsu_updates');
         const cachedTime = localStorage.getItem('kotatsu_updates_time');
         if (cachedUpdates) {
-            try {
-                setUpdates(JSON.parse(cachedUpdates));
-            } catch { }
+            try { setUpdates(JSON.parse(cachedUpdates)); } catch { }
         }
         if (cachedTime) {
             setLastChecked(parseInt(cachedTime));
@@ -93,7 +99,6 @@ export default function UpdatesPage() {
                 newUpdates.push(update);
             }
 
-            // Small delay to avoid overwhelming the API
             await new Promise(resolve => setTimeout(resolve, 500));
         }
 
@@ -101,7 +106,6 @@ export default function UpdatesPage() {
         setLastChecked(Date.now());
         setChecking(false);
 
-        // Cache the results
         localStorage.setItem('kotatsu_updates', JSON.stringify(newUpdates));
         localStorage.setItem('kotatsu_updates_time', Date.now().toString());
     }, [checking, library, history]);
@@ -122,198 +126,232 @@ export default function UpdatesPage() {
     if (!mounted) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-            {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-lg bg-slate-900/80 border-b border-purple-500/20">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link href="/" className="text-purple-400 hover:text-purple-300">
-                                ← Kembali
-                            </Link>
-                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                                🔔 Update Bab Baru
-                            </h1>
-                        </div>
-                        <button
-                            onClick={checkForUpdates}
-                            disabled={checking || library.length === 0}
-                            className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${checking
-                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white'
-                                }`}
-                        >
-                            {checking ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Memeriksa... ({checkProgress.current}/{checkProgress.total})
-                                </>
-                            ) : (
-                                <>🔄 Periksa Update</>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </header>
+        <div className="min-h-screen p-4 lg:p-6 mb-20 lg:mb-0">
+            {/* Page Header */}
+            <div className="flex items-center justify-between mb-6 animate-fadeIn">
+                <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <Bell className="text-[var(--accent-primary)]" /> Update Bab Baru
+                </h1>
+                <button
+                    onClick={checkForUpdates}
+                    disabled={checking || library.length === 0}
+                    className="px-4 py-2 rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 hover:brightness-110 active:scale-95"
+                    style={{
+                        background: checking ? 'var(--bg-surface)' : 'var(--accent-primary)',
+                        color: checking ? 'var(--text-muted)' : 'var(--kotatsu-on-primary)',
+                        border: checking ? '1px solid var(--border-default)' : 'none'
+                    }}
+                >
+                    {checking ? (
+                        <>
+                            <Loader2 size={16} className="animate-spin" />
+                            {checkProgress.current}/{checkProgress.total}
+                        </>
+                    ) : (
+                        <>
+                            <RefreshCw size={16} /> Periksa Update
+                        </>
+                    )}
+                </button>
+            </div>
 
-            <main className="container mx-auto px-4 py-8">
-                {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    <div className="bg-slate-800/30 rounded-2xl border border-slate-700/50 p-6 text-center">
-                        <p className="text-3xl font-bold text-white mb-1">{library.length}</p>
-                        <p className="text-slate-400">Manga di Library</p>
-                    </div>
-                    <div className="bg-slate-800/30 rounded-2xl border border-orange-500/30 p-6 text-center">
-                        <p className="text-3xl font-bold text-orange-400 mb-1">{updates.length}</p>
-                        <p className="text-slate-400">Ada Update Baru</p>
-                    </div>
-                    <div className="bg-slate-800/30 rounded-2xl border border-slate-700/50 p-6 text-center">
-                        <p className="text-sm text-slate-400 mb-1">Terakhir diperiksa</p>
-                        <p className="text-white font-medium">
-                            {lastChecked ? formatTimeAgo(lastChecked) : 'Belum pernah'}
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate-fadeInUp">
+                <div
+                    className="rounded-xl p-5 text-center transition-transform hover:-translate-y-1"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+                >
+                    <p className="text-3xl font-bold mb-1 flex items-center justify-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                        <BookOpen size={24} className="text-[var(--text-muted)]" /> {library.length}
+                    </p>
+                    <p style={{ color: 'var(--text-muted)' }}>Manga di Library</p>
+                </div>
+                <div
+                    className="rounded-xl p-5 text-center transition-transform hover:-translate-y-1 shadow-lg"
+                    style={{ background: 'var(--kotatsu-primary-container)', border: '1px solid var(--accent-primary)' }}
+                >
+                    <p className="text-3xl font-bold mb-1 flex items-center justify-center gap-2" style={{ color: 'var(--kotatsu-on-primary-container)' }}>
+                        <Bell size={24} /> {updates.length}
+                    </p>
+                    <p style={{ color: 'var(--kotatsu-on-primary-container)' }}>Ada Update Baru</p>
+                </div>
+                <div
+                    className="rounded-xl p-5 text-center transition-transform hover:-translate-y-1"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+                >
+                    <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>Terakhir diperiksa</p>
+                    <p className="font-medium flex items-center justify-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                        {lastChecked ? formatTimeAgo(lastChecked) : 'Belum pernah'}
+                    </p>
+                </div>
+            </div>
+
+            {/* Progress Bar */}
+            {checking && (
+                <div
+                    className="rounded-xl p-5 mb-6 animate-scaleIn"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--accent-primary)' }}
+                >
+                    <div className="flex items-center justify-between mb-3">
+                        <p className="font-medium flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                            <RefreshCw size={16} className="animate-spin text-[var(--accent-primary)]" /> Memeriksa update...
                         </p>
+                        <p style={{ color: 'var(--accent-primary)' }}>{checkProgress.current} / {checkProgress.total}</p>
+                    </div>
+                    <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                        <div
+                            className="h-full transition-all duration-300"
+                            style={{
+                                width: `${(checkProgress.current / checkProgress.total) * 100}%`,
+                                background: 'var(--accent-primary)',
+                            }}
+                        />
                     </div>
                 </div>
+            )}
 
-                {/* Progress Bar during checking */}
-                {checking && (
-                    <div className="mb-8">
-                        <div className="bg-slate-800/30 rounded-2xl border border-purple-500/30 p-6">
-                            <div className="flex items-center justify-between mb-3">
-                                <p className="text-white font-medium">Memeriksa update...</p>
-                                <p className="text-purple-300">{checkProgress.current} / {checkProgress.total}</p>
-                            </div>
-                            <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                                    style={{ width: `${(checkProgress.current / checkProgress.total) * 100}%` }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Updates List */}
-                {updates.length > 0 ? (
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-white mb-4">
-                            📢 Manga dengan Bab Baru
-                        </h2>
-                        {updates.map((update) => (
-                            <div
-                                key={`${update.mangaId}-${update.source}`}
-                                className="bg-slate-800/30 rounded-2xl border border-orange-500/30 overflow-hidden hover:border-orange-500/50 transition-all"
-                            >
-                                <div className="flex gap-4 p-4">
-                                    {/* Cover */}
-                                    <Link
-                                        href={`/manga/${update.source}/${update.mangaId}`}
-                                        className="flex-shrink-0"
+            {/* Updates List */}
+            {updates.length > 0 ? (
+                <div className="space-y-4 animate-fadeInUp">
+                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                        <Megaphone size={20} className="text-[var(--accent-primary)]" /> Manga dengan Bab Baru
+                    </h2>
+                    {updates.map((update, index) => (
+                        <div
+                            key={`${update.mangaId}-${update.source}`}
+                            className="rounded-xl overflow-hidden transition-all hover:translate-x-1 animate-fadeInUp"
+                            style={{
+                                background: 'var(--bg-surface)',
+                                border: '1px solid var(--accent-primary)',
+                                animationDelay: `${index * 50}ms`
+                            }}
+                        >
+                            <div className="flex gap-4 p-4">
+                                {/* Cover */}
+                                <Link href={`/manga/${update.source}/${update.mangaId}`} className="flex-shrink-0">
+                                    <div
+                                        className="w-20 h-28 rounded-lg overflow-hidden relative"
+                                        style={{ background: 'var(--bg-elevated)' }}
                                     >
-                                        <div className="w-24 h-32 rounded-lg overflow-hidden bg-slate-700">
-                                            {update.mangaCover ? (
-                                                <img
-                                                    src={update.mangaCover}
-                                                    alt={update.mangaTitle}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        e.currentTarget.style.display = 'none';
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-3xl">📖</div>
-                                            )}
+                                        {update.mangaCover ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img
+                                                src={`/api/proxy-image?url=${encodeURIComponent(update.mangaCover)}`}
+                                                alt={update.mangaTitle}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                                    if (fallback) fallback.style.display = 'flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div className="absolute inset-0 flex items-center justify-center" style={{ display: update.mangaCover ? 'none' : 'flex' }}>
+                                            <BookOpen size={24} className="text-[var(--text-muted)] opacity-50" />
                                         </div>
+                                    </div>
+                                </Link>
+
+                                {/* Info */}
+                                <div className="flex-grow min-w-0">
+                                    <Link href={`/manga/${update.source}/${update.mangaId}`}>
+                                        <h3 className="font-bold text-lg truncate hover:text-[var(--accent-primary)] transition-colors" style={{ color: 'var(--text-primary)' }}>
+                                            {update.mangaTitle}
+                                        </h3>
                                     </Link>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[var(--kotatsu-primary-container)] text-[var(--kotatsu-on-primary-container)]">
+                                            +{update.newChaptersCount} bab baru
+                                        </span>
+                                        <span className="text-sm capitalize opacity-70" style={{ color: 'var(--text-secondary)' }}>
+                                            {update.source}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm mt-2 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                                        Ch. {update.lastReadChapter} <ArrowRight size={14} /> Ch. {update.latestChapter}
+                                    </p>
 
-                                    {/* Info */}
-                                    <div className="flex-grow min-w-0">
-                                        <Link href={`/manga/${update.source}/${update.mangaId}`}>
-                                            <h3 className="text-white font-semibold text-lg truncate hover:text-orange-300 transition-colors">
-                                                {update.mangaTitle}
-                                            </h3>
+                                    <div className="flex gap-2 mt-3">
+                                        <Link
+                                            href={`/manga/${update.source}/${update.mangaId}`}
+                                            className="px-4 py-2 rounded-lg text-sm transition-all hover:brightness-110 active:scale-95 flex items-center gap-2 font-medium"
+                                            style={{ background: 'var(--accent-primary)', color: 'var(--kotatsu-on-primary)' }}
+                                        >
+                                            <BookOpen size={16} /> Lihat Bab Baru
                                         </Link>
-                                        <div className="flex items-center gap-2 mt-2">
-                                            <span className="px-2 py-1 bg-orange-500/20 text-orange-300 text-sm rounded-lg">
-                                                +{update.newChaptersCount} bab baru
-                                            </span>
-                                            <span className="text-slate-500 text-sm">
-                                                {update.source}
-                                            </span>
-                                        </div>
-                                        <p className="text-slate-400 text-sm mt-2">
-                                            Terakhir baca: Ch. {update.lastReadChapter} → Terbaru: Ch. {update.latestChapter}
-                                        </p>
-
-                                        {/* Actions */}
-                                        <div className="flex gap-2 mt-4">
-                                            <Link
-                                                href={`/manga/${update.source}/${update.mangaId}`}
-                                                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm rounded-lg transition-colors"
-                                            >
-                                                📖 Lihat Bab Baru
-                                            </Link>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                ) : library.length === 0 ? (
-                    <div className="text-center py-20">
-                        <p className="text-6xl mb-4">❤️</p>
-                        <p className="text-slate-400 text-lg mb-2">Belum ada manga di library.</p>
-                        <p className="text-slate-500 text-sm mb-4">
-                            Tambahkan manga ke bookmark untuk mendapatkan notifikasi bab baru.
-                        </p>
-                        <Link href="/" className="text-purple-400 hover:text-purple-300">
-                            Jelajahi manga →
-                        </Link>
-                    </div>
-                ) : !checking && lastChecked ? (
-                    <div className="text-center py-20">
-                        <p className="text-6xl mb-4">✅</p>
-                        <p className="text-slate-400 text-lg mb-2">Semua manga sudah up-to-date!</p>
-                        <p className="text-slate-500 text-sm">
-                            Klik "Periksa Update" untuk memeriksa kembali.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="text-center py-20">
-                        <p className="text-6xl mb-4">🔔</p>
-                        <p className="text-slate-400 text-lg mb-2">Periksa update bab baru</p>
-                        <p className="text-slate-500 text-sm mb-4">
-                            Klik tombol "Periksa Update" untuk melihat manga mana yang punya bab baru.
-                        </p>
-                        <button
-                            onClick={checkForUpdates}
-                            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white rounded-xl transition-all"
-                        >
-                            🔄 Periksa Update Sekarang
-                        </button>
-                    </div>
-                )}
-
-                {/* Info */}
-                <div className="mt-12 bg-slate-800/30 rounded-2xl border border-slate-700/50 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-2">ℹ️ Cara Kerja</h3>
-                    <ul className="text-slate-400 text-sm space-y-2">
-                        <li>• Fitur ini memeriksa semua manga di library kamu</li>
-                        <li>• Membandingkan chapter terakhir yang kamu baca dengan chapter terbaru</li>
-                        <li>• Menampilkan manga yang memiliki bab baru yang belum dibaca</li>
-                        <li>• Hasil pemeriksaan disimpan untuk akses cepat</li>
-                    </ul>
+                        </div>
+                    ))}
                 </div>
-            </main>
-
-            {/* Footer */}
-            <footer className="border-t border-slate-800 py-6 mt-12">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-slate-500 text-sm">
-                        Kotatsu Web Clone • Update Checker
+            ) : library.length === 0 ? (
+                <div className="text-center py-20 animate-fadeIn">
+                    <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
+                        <Heart size={40} className="text-[var(--text-muted)] opacity-50" />
+                    </div>
+                    <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Belum ada manga di library.</p>
+                    <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+                        Tambahkan manga ke bookmark untuk mendapatkan notifikasi bab baru.
                     </p>
+                    <Link
+                        href="/explore"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all hover:scale-105 active:scale-95"
+                        style={{ background: 'var(--accent-primary)', color: 'white' }}
+                    >
+                        Jelajahi manga <ArrowRight size={16} />
+                    </Link>
                 </div>
-            </footer>
+            ) : !checking && lastChecked ? (
+                <div className="text-center py-20 animate-fadeIn">
+                    <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle2 size={40} className="text-green-500" />
+                    </div>
+                    <p className="text-lg font-bold mb-2 text-green-500">Semua manga sudah up-to-date!</p>
+                    <p className="text-sm opacity-70" style={{ color: 'var(--text-muted)' }}>
+                        Belum ada bab baru sejak pemeriksaan terakhir.
+                    </p>
+                    <button
+                        onClick={checkForUpdates}
+                        className="mt-6 text-[var(--accent-primary)] text-sm hover:underline"
+                    >
+                        Periksa Lagi
+                    </button>
+                </div>
+            ) : (
+                <div className="text-center py-20 animate-fadeIn">
+                    <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
+                        <Bell size={40} className="text-[var(--text-muted)] opacity-50" />
+                    </div>
+                    <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Periksa update bab baru</p>
+                    <p className="text-sm mb-6 opacity-70" style={{ color: 'var(--text-muted)' }}>
+                        Klik tombol di bawah untuk memeriksa semua manga di library kamu.
+                    </p>
+                    <button
+                        onClick={checkForUpdates}
+                        className="px-6 py-3 rounded-xl transition-all hover:scale-105 active:scale-95 font-bold shadow-lg shadow-[var(--accent-primary)]/20 flex items-center gap-2 mx-auto"
+                        style={{ background: 'var(--accent-primary)', color: 'var(--kotatsu-on-primary)' }}
+                    >
+                        <RefreshCw size={20} /> Periksa Update Sekarang
+                    </button>
+                </div>
+            )}
+
+            {/* Info Box */}
+            <div
+                className="mt-8 rounded-xl p-5 animate-fadeInUp"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+            >
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <Info size={20} className="text-[var(--accent-primary)]" /> Cara Kerja
+                </h3>
+                <ul className="text-sm space-y-2 pl-2" style={{ color: 'var(--text-secondary)' }}>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]"></div> Memeriksa semua manga di library kamu</li>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]"></div> Membandingkan chapter terakhir dibaca dengan chapter terbaru</li>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]"></div> Menampilkan manga dengan bab baru yang belum dibaca</li>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]"></div> Hasil pemeriksaan disimpan untuk akses cepat</li>
+                </ul>
+            </div>
         </div>
     );
 }

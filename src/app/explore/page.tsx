@@ -2,6 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+    Search,
+    Grid,
+    List,
+    CheckCircle2,
+    Clock,
+    Ban,
+    Wrench,
+    Info,
+    ArrowRight,
+    Globe,
+    Filter
+} from 'lucide-react';
 import { getDisplaySettings, setDisplaySettings, type ViewMode } from '@/lib/storage';
 
 interface SourceInfo {
@@ -15,7 +28,6 @@ interface SourceInfo {
     icon: string;
 }
 
-// Available sources with metadata
 const SOURCES: SourceInfo[] = [
     {
         id: 'shinigami',
@@ -25,7 +37,17 @@ const SOURCES: SourceInfo[] = [
         description: 'Sumber manga populer dengan update cepat dan koleksi lengkap.',
         genres: ['Action', 'Romance', 'Fantasy', 'Comedy', 'Drama'],
         baseUrl: 'id.shinigami.asia',
-        icon: '💀',
+        icon: 'https://shinigami.id/wp-content/uploads/2022/08/Shinigami-Ico.png',
+    },
+    {
+        id: 'mgkomik',
+        name: 'Mgkomik',
+        language: 'Indonesia',
+        status: 'active',
+        description: 'Platform Madara dengan koleksi manga dan manhwa terlengkap.',
+        genres: ['Action', 'Romance', 'Fantasy', 'Isekai', 'Manhwa'],
+        baseUrl: 'id.mgkomik.cc',
+        icon: 'https://id.mgkomik.cc/wp-content/uploads/2023/05/cropped-MG-32x32.png',
     },
     {
         id: 'komikcast',
@@ -35,7 +57,7 @@ const SOURCES: SourceInfo[] = [
         description: 'Sumber manga dengan terjemahan berkualitas tinggi.',
         genres: ['Action', 'Adventure', 'Fantasy', 'Isekai'],
         baseUrl: 'komikcast.lol',
-        icon: '📺',
+        icon: 'https://komikcast.ch/wp-content/uploads/2020/03/cropped-logo_babi_2-01-32x32.png',
     },
     {
         id: 'komiku',
@@ -45,7 +67,7 @@ const SOURCES: SourceInfo[] = [
         description: 'Koleksi manga dan manhwa Indonesia.',
         genres: ['Manhwa', 'Manhua', 'Action', 'Romance'],
         baseUrl: 'komiku.id',
-        icon: '📚',
+        icon: 'https://komiku.id/wp-content/uploads/2022/01/cropped-Komiku-32x32.png',
     },
     {
         id: 'mangadex',
@@ -55,7 +77,7 @@ const SOURCES: SourceInfo[] = [
         description: 'Platform manga internasional dengan multi-bahasa.',
         genres: ['All Genres'],
         baseUrl: 'mangadex.org',
-        icon: '🌐',
+        icon: 'https://mangadex.org/favicon.ico',
     },
 ];
 
@@ -80,10 +102,8 @@ export default function ExplorePage() {
         setDisplaySettings({ exploreMode: mode });
     };
 
-    // Get unique languages
     const languages = ['all', ...new Set(SOURCES.map(s => s.language))];
 
-    // Filter and sort sources
     const filteredSources = SOURCES
         .filter(source => {
             if (filterLanguage !== 'all' && source.language !== filterLanguage) return false;
@@ -96,7 +116,6 @@ export default function ExplorePage() {
                 case 'name':
                     return a.name.localeCompare(b.name);
                 case 'popularity':
-                    // Active sources first
                     const statusOrder = { active: 0, timeout: 1, maintenance: 2, blocked: 3 };
                     return statusOrder[a.status] - statusOrder[b.status];
                 case 'status':
@@ -106,92 +125,130 @@ export default function ExplorePage() {
             }
         });
 
-    const getStatusColor = (status: string) => {
+    const getStatusStyle = (status: string) => {
         switch (status) {
-            case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30';
-            case 'timeout': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'blocked': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            case 'maintenance': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            default: return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+            case 'active': return { bg: 'rgba(129, 199, 132, 0.15)', color: 'var(--accent-success)', border: 'rgba(129, 199, 132, 0.3)' };
+            case 'timeout': return { bg: 'rgba(251, 140, 0, 0.15)', color: 'var(--accent-warning)', border: 'rgba(251, 140, 0, 0.3)' };
+            case 'blocked': return { bg: 'rgba(255, 180, 169, 0.15)', color: 'var(--accent-error)', border: 'rgba(255, 180, 169, 0.3)' };
+            case 'maintenance': return { bg: 'rgba(171, 199, 255, 0.15)', color: 'var(--accent-primary)', border: 'rgba(171, 199, 255, 0.3)' };
+            default: return { bg: 'var(--bg-surface)', color: 'var(--text-muted)', border: 'var(--border-default)' };
+        }
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'active': return <CheckCircle2 size={14} />;
+            case 'timeout': return <Clock size={14} />;
+            case 'blocked': return <Ban size={14} />;
+            case 'maintenance': return <Wrench size={14} />;
+            default: return null;
         }
     };
 
     const getStatusLabel = (status: string) => {
         switch (status) {
-            case 'active': return '✓ Aktif';
-            case 'timeout': return '⏱️ Timeout';
-            case 'blocked': return '🚫 Diblokir';
-            case 'maintenance': return '🔧 Maintenance';
+            case 'active': return 'Aktif';
+            case 'timeout': return 'Timeout';
+            case 'blocked': return 'Diblokir';
+            case 'maintenance': return 'Maintenance';
             default: return status;
         }
+    };
+
+    const renderIcon = (source: SourceInfo) => {
+        if (!source.icon.startsWith('http')) {
+            return <span className="text-4xl">{source.icon}</span>;
+        }
+
+        const iconUrl = source.icon;
+
+        return (
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white p-1 shadow-sm border border-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                    src={iconUrl}
+                    alt={source.name}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://www.google.com/s2/favicons?domain=${source.baseUrl}&sz=128`;
+                    }}
+                />
+            </div>
+        );
     };
 
     if (!mounted) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-            {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-lg bg-slate-900/80 border-b border-purple-500/20">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link href="/" className="text-purple-400 hover:text-purple-300">
-                                ← Kembali
-                            </Link>
-                            <h1 className="text-2xl font-bold text-white">
-                                🔍 Jelajahi Sumber
-                            </h1>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Link
-                                href="/library"
-                                className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-all"
-                            >
-                                📚
-                            </Link>
-                            <Link
-                                href="/settings"
-                                className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-all"
-                            >
-                                ⚙️
-                            </Link>
-                        </div>
+        <div className="min-h-screen p-4 lg:p-6">
+            {/* Page Header */}
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <Globe size={24} className="text-[var(--accent-primary)]" />
+                    Jelajahi Sumber
+                </h1>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                    Pilih sumber manga favoritmu dari berbagai platform
+                </p>
+            </div>
+
+            {/* Filters Toolbar */}
+            <div
+                className="rounded-xl p-4 mb-6"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+            >
+                <div className="flex flex-wrap items-center gap-4">
+                    {/* Search */}
+                    <div className="flex-grow min-w-[200px] relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Cari sumber..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all"
+                            style={{
+                                background: 'var(--bg-elevated)',
+                                color: 'var(--text-primary)',
+                                border: '1px solid var(--border-default)',
+                            }}
+                        />
                     </div>
-                </div>
-            </header>
 
-            <main className="container mx-auto px-4 py-8">
-                {/* Filters Toolbar */}
-                <div className="bg-slate-800/30 rounded-2xl border border-slate-700/50 p-4 mb-6">
-                    <div className="flex flex-wrap items-center gap-4">
-                        {/* Search */}
-                        <div className="flex-grow min-w-[200px]">
-                            <input
-                                type="text"
-                                placeholder="Cari sumber..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-slate-900/50 text-white px-4 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-purple-500"
-                            />
-                        </div>
-
-                        {/* Language Filter */}
+                    {/* Language Filter */}
+                    <div className="relative">
                         <select
                             value={filterLanguage}
                             onChange={(e) => setFilterLanguage(e.target.value)}
-                            className="bg-slate-900/50 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-purple-500"
+                            className="px-4 py-2 pr-8 rounded-lg focus:outline-none appearance-none cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors"
+                            style={{
+                                background: 'var(--bg-elevated)',
+                                color: 'var(--text-primary)',
+                                border: '1px solid var(--border-default)',
+                            }}
                         >
                             <option value="all">Semua Bahasa</option>
                             {languages.filter(l => l !== 'all').map(lang => (
                                 <option key={lang} value={lang}>{lang}</option>
                             ))}
                         </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                            <Filter size={14} />
+                        </div>
+                    </div>
 
-                        {/* Status Filter */}
+                    {/* Status Filter */}
+                    <div className="relative">
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="bg-slate-900/50 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-purple-500"
+                            className="px-4 py-2 pr-8 rounded-lg focus:outline-none appearance-none cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors"
+                            style={{
+                                background: 'var(--bg-elevated)',
+                                color: 'var(--text-primary)',
+                                border: '1px solid var(--border-default)',
+                            }}
                         >
                             <option value="all">Semua Status</option>
                             <option value="active">Aktif</option>
@@ -199,135 +256,216 @@ export default function ExplorePage() {
                             <option value="blocked">Diblokir</option>
                             <option value="maintenance">Maintenance</option>
                         </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                            <Filter size={14} />
+                        </div>
+                    </div>
 
-                        {/* Sort */}
+                    {/* Sort */}
+                    <div className="relative">
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            className="bg-slate-900/50 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-purple-500"
+                            className="px-4 py-2 pr-8 rounded-lg focus:outline-none appearance-none cursor-pointer hover:bg-[var(--bg-elevated)] transition-colors"
+                            style={{
+                                background: 'var(--bg-elevated)',
+                                color: 'var(--text-primary)',
+                                border: '1px solid var(--border-default)',
+                            }}
                         >
                             <option value="name">Urutkan: Nama</option>
                             <option value="popularity">Urutkan: Popularitas</option>
                             <option value="status">Urutkan: Status</option>
                         </select>
-
-                        {/* View Mode Toggle */}
-                        <div className="flex bg-slate-900/50 rounded-lg p-1 border border-slate-700">
-                            <button
-                                onClick={() => handleViewModeChange('grid')}
-                                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                            >
-                                ⊞
-                            </button>
-                            <button
-                                onClick={() => handleViewModeChange('list')}
-                                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                            >
-                                ☰
-                            </button>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                            <Filter size={14} />
                         </div>
                     </div>
-                </div>
 
-                {/* Sources Grid/List */}
-                {viewMode === 'grid' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredSources.map((source) => (
+                    {/* View Mode Toggle */}
+                    <div
+                        className="flex rounded-lg p-1"
+                        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
+                    >
+                        <button
+                            onClick={() => handleViewModeChange('grid')}
+                            className="px-3 py-1.5 text-sm rounded-md transition-all"
+                            style={{
+                                background: viewMode === 'grid' ? 'var(--accent-primary)' : 'transparent',
+                                color: viewMode === 'grid' ? 'var(--kotatsu-on-primary)' : 'var(--text-muted)',
+                            }}
+                        >
+                            <Grid size={18} />
+                        </button>
+                        <button
+                            onClick={() => handleViewModeChange('list')}
+                            className="px-3 py-1.5 text-sm rounded-md transition-all"
+                            style={{
+                                background: viewMode === 'list' ? 'var(--accent-primary)' : 'transparent',
+                                color: viewMode === 'list' ? 'var(--kotatsu-on-primary)' : 'var(--text-muted)',
+                            }}
+                        >
+                            <List size={18} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Sources Grid/List */}
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-fadeIn">
+                    {filteredSources.map((source, index) => {
+                        const statusStyle = getStatusStyle(source.status);
+                        return (
                             <Link
                                 key={source.id}
-                                href={`/?source=${source.id}`}
-                                className={`group bg-slate-800/30 rounded-2xl border border-slate-700/50 p-6 hover:border-purple-500/50 transition-all hover:-translate-y-1 ${source.status !== 'active' ? 'opacity-70' : ''}`}
+                                href={`/source/${source.id}`}
+                                className="group rounded-xl p-6 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-[var(--accent-primary)] animate-fadeInUp"
+                                style={{
+                                    background: 'var(--bg-surface)',
+                                    border: '1px solid var(--border-default)',
+                                    opacity: source.status !== 'active' ? 0.7 : 1,
+                                    animationDelay: `${index * 50}ms`
+                                }}
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <span className="text-4xl">{source.icon}</span>
-                                    <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(source.status)}`}>
+                                    {renderIcon(source)}
+                                    <span
+                                        className="px-2 py-1 text-xs rounded-full flex items-center gap-1.5 font-medium border"
+                                        style={{
+                                            background: statusStyle.bg,
+                                            color: statusStyle.color,
+                                            borderColor: statusStyle.border,
+                                        }}
+                                    >
+                                        {getStatusIcon(source.status)}
                                         {getStatusLabel(source.status)}
                                     </span>
                                 </div>
-                                <h3 className="text-xl font-semibold text-white mb-1 group-hover:text-purple-300 transition-colors">
+                                <h3
+                                    className="text-xl font-bold mb-1 transition-colors group-hover:text-[var(--accent-primary)]"
+                                    style={{ color: 'var(--text-primary)' }}
+                                >
                                     {source.name}
                                 </h3>
-                                <p className="text-slate-400 text-sm mb-3">{source.baseUrl}</p>
-                                <p className="text-slate-500 text-sm mb-4 line-clamp-2">{source.description}</p>
+                                <p className="text-sm mb-3 font-mono opacity-70" style={{ color: 'var(--text-muted)' }}>
+                                    {source.baseUrl}
+                                </p>
+                                <p className="text-sm mb-4 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                                    {source.description}
+                                </p>
                                 <div className="flex flex-wrap gap-1">
-                                    <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded">
+                                    <span
+                                        className="chip chip-primary text-xs"
+                                    >
                                         {source.language}
                                     </span>
                                     {source.genres.slice(0, 2).map((genre) => (
-                                        <span key={genre} className="px-2 py-0.5 bg-slate-700/50 text-slate-400 text-xs rounded">
+                                        <span
+                                            key={genre}
+                                            className="chip chip-secondary text-xs"
+                                        >
                                             {genre}
                                         </span>
                                     ))}
                                 </div>
                             </Link>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {filteredSources.map((source) => (
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="space-y-3 animate-fadeIn">
+                    {filteredSources.map((source, index) => {
+                        const statusStyle = getStatusStyle(source.status);
+                        return (
                             <Link
                                 key={source.id}
-                                href={`/?source=${source.id}`}
-                                className={`flex items-center gap-4 bg-slate-800/30 rounded-2xl border border-slate-700/50 p-4 hover:border-purple-500/50 transition-all ${source.status !== 'active' ? 'opacity-70' : ''}`}
+                                href={`/source/${source.id}`}
+                                className="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-[var(--bg-elevated)] hover:border-[var(--accent-primary)] animate-fadeInUp"
+                                style={{
+                                    background: 'var(--bg-surface)',
+                                    border: '1px solid var(--border-default)',
+                                    opacity: source.status !== 'active' ? 0.7 : 1,
+                                    animationDelay: `${index * 50}ms`
+                                }}
                             >
-                                <span className="text-3xl flex-shrink-0">{source.icon}</span>
+                                <div className="flex-shrink-0">
+                                    {renderIcon(source)}
+                                </div>
                                 <div className="flex-grow min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="text-lg font-semibold text-white">{source.name}</h3>
-                                        <span className={`px-2 py-0.5 text-xs rounded-full border ${getStatusColor(source.status)}`}>
+                                        <h3 className="text-lg font-bold group-hover:text-[var(--accent-primary)]" style={{ color: 'var(--text-primary)' }}>
+                                            {source.name}
+                                        </h3>
+                                        <span
+                                            className="px-2 py-0.5 text-xs rounded-full flex items-center gap-1 border"
+                                            style={{
+                                                background: statusStyle.bg,
+                                                color: statusStyle.color,
+                                                borderColor: statusStyle.border,
+                                            }}
+                                        >
+                                            {getStatusIcon(source.status)}
                                             {getStatusLabel(source.status)}
                                         </span>
                                     </div>
-                                    <p className="text-slate-400 text-sm">{source.description}</p>
+                                    <p className="text-sm line-clamp-1" style={{ color: 'var(--text-secondary)' }}>
+                                        {source.description}
+                                    </p>
                                 </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                    <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded">
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                    <span className="chip chip-primary text-xs hidden sm:inline-flex">
                                         {source.language}
                                     </span>
-                                    <span className="text-slate-500">→</span>
+                                    <ArrowRight size={20} className="text-[var(--text-muted)]" />
                                 </div>
                             </Link>
-                        ))}
-                    </div>
-                )}
+                        );
+                    })}
+                </div>
+            )}
 
-                {/* Empty State */}
-                {filteredSources.length === 0 && (
-                    <div className="text-center py-20">
-                        <p className="text-6xl mb-4">🔍</p>
-                        <p className="text-slate-400 text-lg">Tidak ada sumber yang cocok dengan filter.</p>
-                        <button
-                            onClick={() => {
-                                setSearchQuery('');
-                                setFilterLanguage('all');
-                                setFilterStatus('all');
-                            }}
-                            className="text-purple-400 hover:text-purple-300 mt-2"
-                        >
-                            Reset filter
-                        </button>
+            {/* Empty State */}
+            {filteredSources.length === 0 && (
+                <div className="text-center py-20 animate-fadeIn">
+                    <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
+                        <Search size={40} className="text-[var(--text-muted)] opacity-50" />
                     </div>
-                )}
+                    <p className="text-lg font-medium" style={{ color: 'var(--text-muted)' }}>
+                        Tidak ada sumber yang cocok dengan filter.
+                    </p>
+                    <button
+                        onClick={() => {
+                            setSearchQuery('');
+                            setFilterLanguage('all');
+                            setFilterStatus('all');
+                        }}
+                        className="mt-4 px-6 py-2 rounded-lg bg-[var(--accent-primary)] text-[var(--kotatsu-on-primary)] font-medium transition-transform hover:scale-105"
+                    >
+                        Reset filter
+                    </button>
+                </div>
+            )}
 
-                {/* Info Box */}
-                <div className="mt-8 bg-slate-800/30 rounded-2xl border border-slate-700/50 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-2">ℹ️ Tentang Sumber</h3>
-                    <p className="text-slate-400 text-sm">
+            {/* Info Box */}
+            <div
+                className="mt-8 rounded-xl p-6 flex gap-4 animate-slideUp"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+            >
+                <div className="flex-shrink-0 text-[var(--accent-primary)]">
+                    <Info size={24} />
+                </div>
+                <div>
+                    <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                        Tentang Sumber
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                         Sumber manga adalah website tempat data manga diambil. Status sumber dapat berubah sewaktu-waktu
                         tergantung ketersediaan dan aksesibilitas website asli. Sumber dengan status "Diblokir" mungkin
                         memerlukan VPN untuk diakses.
                     </p>
                 </div>
-            </main>
-
-            {/* Footer */}
-            <footer className="border-t border-slate-800 py-6 mt-12">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-slate-500 text-sm">
-                        Kotatsu Web Clone • {SOURCES.length} sumber tersedia
-                    </p>
-                </div>
-            </footer>
+            </div>
         </div>
     );
 }

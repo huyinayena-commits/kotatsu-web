@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
+import million from "million/compiler";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Silence Turbopack warning about webpack config from Million.js
+  turbopack: {
+    root: __dirname,
+  },
 };
 
-export default nextConfig;
+export default million.next(nextConfig, { auto: true });

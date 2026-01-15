@@ -2,7 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getHistory, type ReadingHistory } from '@/lib/storage';
+import {
+    Clock,
+    Book,
+    Compass,
+    Flame,
+    Timer,
+    Ban,
+    AlertCircle,
+    ArrowRight,
+    Search
+} from 'lucide-react';
+import { getHistory, removeFromHistory, type ReadingHistory } from '@/lib/storage';
+import { MangaCard, MangaGrid, ViewToggle } from '@/components/manga';
 
 interface MangaItem {
     source: string;
@@ -13,7 +25,6 @@ interface MangaItem {
     slug: string;
     status?: string;
     genres?: string[];
-    description?: string | null;
 }
 
 interface APIResponse {
@@ -31,10 +42,15 @@ export default function Home() {
     const [currentSource, setCurrentSource] = useState('shinigami');
     const [history, setHistory] = useState<ReadingHistory[]>([]);
     const [mounted, setMounted] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [sortBy, setSortBy] = useState<'recent' | 'title'>('recent');
 
     useEffect(() => {
         setMounted(true);
         setHistory(getHistory());
+        // Load saved preferences
+        const savedView = localStorage.getItem('homeViewMode') as 'grid' | 'list';
+        if (savedView) setViewMode(savedView);
     }, []);
 
     useEffect(() => {
@@ -47,14 +63,13 @@ export default function Home() {
         try {
             const response = await fetch(`/api/sources/${source}`);
             const data: APIResponse = await response.json();
-
             if (data.success) {
                 setMangaList(data.data);
             } else {
                 setError(data.error || 'Gagal memuat data');
                 setMangaList([]);
             }
-        } catch (err) {
+        } catch {
             setError('Terjadi kesalahan saat memuat data');
             setMangaList([]);
         } finally {
@@ -62,28 +77,14 @@ export default function Home() {
         }
     };
 
-    const sources = [
-        { id: 'shinigami', name: 'Shinigami', status: 'active', color: 'purple' },
-        { id: 'komikcast', name: 'Komikcast', status: 'timeout', color: 'blue' },
-        { id: 'komiku', name: 'Komiku', status: 'blocked', color: 'green' },
-    ];
-
-    const getSourceColor = (source: string) => {
-        const s = sources.find(src => src.id === source);
-        switch (s?.color) {
-            case 'purple': return 'bg-purple-500/80';
-            case 'blue': return 'bg-blue-500/80';
-            case 'green': return 'bg-green-500/80';
-            default: return 'bg-slate-500/80';
-        }
+    const handleViewChange = (view: 'grid' | 'list') => {
+        setViewMode(view);
+        localStorage.setItem('homeViewMode', view);
     };
 
-    // Get detail page URL based on source
-    const getMangaDetailUrl = (manga: MangaItem, source: string): string => {
-        if (source === 'shinigami') {
-            return `/manga/shinigami/${manga.id || manga.slug}`;
-        }
-        return `/manga/${source}/${manga.slug}`;
+    const handleRemoveHistory = (mangaId: string, source: string) => {
+        removeFromHistory(mangaId, source);
+        setHistory(getHistory());
     };
 
     const formatTimeAgo = (timestamp: number) => {
@@ -96,243 +97,245 @@ export default function Home() {
         if (minutes < 1) return 'Baru saja';
         if (minutes < 60) return `${minutes}m lalu`;
         if (hours < 24) return `${hours}j lalu`;
-        if (days < 7) return `${days}h lalu`;
         return `${days}h lalu`;
     };
 
+    const sortedHistory = [...history].sort((a, b) => {
+        if (sortBy === 'recent') return b.lastReadAt - a.lastReadAt;
+        return a.mangaTitle.localeCompare(b.mangaTitle);
+    });
+
+    const sources = [
+        { id: 'shinigami', name: 'Shinigami', status: 'active' },
+        { id: 'mgkomik', name: 'Mgkomik', status: 'active' },
+        { id: 'komikcast', name: 'Komikcast', status: 'timeout' },
+        { id: 'komiku', name: 'Komiku', status: 'blocked' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-            {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-lg bg-slate-900/80 border-b border-purple-500/20">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            📚 Kotatsu Web
-                        </h1>
-                        <div className="flex items-center gap-2">
-                            <Link
-                                href="/updates"
-                                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white rounded-xl transition-all flex items-center gap-2"
-                            >
-                                🔔 <span className="hidden sm:inline">Update</span>
-                            </Link>
-                            <Link
-                                href="/search"
-                                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all flex items-center gap-2"
-                            >
-                                🔍 <span className="hidden sm:inline">Cari</span>
-                            </Link>
-                            <Link
-                                href="/explore"
-                                className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-all"
-                            >
-                                🌐 <span className="hidden sm:inline">Sumber</span>
-                            </Link>
-                            <Link
-                                href="/library"
-                                className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-all"
-                            >
-                                📚 <span className="hidden sm:inline">Perpustakaan</span>
-                            </Link>
-                            <Link
-                                href="/settings"
-                                className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-all"
-                            >
-                                ⚙️
-                            </Link>
+        <div className="min-h-screen p-4 lg:p-6 mb-16 lg:mb-0">
+            {/* Page Header */}
+            <div className="mb-6 animate-fadeIn">
+                <h1
+                    className="text-2xl font-bold mb-2 flex items-center gap-2"
+                    style={{ color: 'var(--text-primary)' }}
+                >
+                    <Clock className="text-[var(--accent-primary)]" /> History
+                </h1>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                    Lanjut membaca manga favoritmu
+                </p>
+            </div>
+
+            {/* Toolbar */}
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4 animate-slideDown">
+                <div className="flex items-center gap-2">
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as 'recent' | 'title')}
+                        className="px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[var(--bg-elevated)] cursor-pointer"
+                        style={{
+                            background: 'var(--bg-surface)',
+                            color: 'var(--text-primary)',
+                            border: '1px solid var(--border-default)',
+                        }}
+                    >
+                        <option value="recent">Terbaru</option>
+                        <option value="title">Judul A-Z</option>
+                    </select>
+                </div>
+                <ViewToggle view={viewMode} onChange={handleViewChange} />
+            </div>
+
+            {/* History Section */}
+            {mounted && sortedHistory.length > 0 && (
+                <section className="mb-10 animate-fadeInUp">
+                    <MangaGrid variant={viewMode}>
+                        {sortedHistory.map((item, index) => (
+                            <div key={`${item.mangaId}-${item.source}`} style={{ animationDelay: `${index * 50}ms` }} className="animate-fadeInUp">
+                                <MangaCard
+                                    id={item.mangaId}
+                                    title={item.mangaTitle}
+                                    cover={item.mangaCover}
+                                    source={item.source}
+                                    chapter={item.chapterTitle}
+                                    chapterNumber={item.chapterNumber}
+                                    lastRead={formatTimeAgo(item.lastReadAt)}
+                                    variant={viewMode}
+                                    href={`/read/${item.source}/${item.mangaId}/${item.chapterId}`}
+                                    onRemove={() => handleRemoveHistory(item.mangaId, item.source)}
+                                />
+                            </div>
+                        ))}
+                    </MangaGrid>
+                </section>
+            )}
+
+            {/* Empty History State */}
+            {mounted && sortedHistory.length === 0 && (
+                <div
+                    className="text-center py-16 rounded-2xl mb-10 animate-scaleIn"
+                    style={{
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border-default)',
+                    }}
+                >
+                    <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
+                        <Book size={40} className="text-[var(--text-muted)] opacity-50" />
+                    </div>
+                    <h3
+                        className="text-lg font-medium mb-2"
+                        style={{ color: 'var(--text-primary)' }}
+                    >
+                        Belum ada riwayat baca
+                    </h3>
+                    <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
+                        Mulai baca manga dari Explore
+                    </p>
+                    <Link
+                        href="/explore"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all hover:scale-105 active:scale-95"
+                        style={{
+                            background: 'var(--accent-primary)',
+                            color: 'var(--kotatsu-on-primary)',
+                        }}
+                    >
+                        <Compass size={18} /> Explore Manga
+                    </Link>
+                </div>
+            )}
+
+            {/* Divider */}
+            <hr
+                className="my-8 opacity-50"
+                style={{ borderColor: 'var(--border-default)' }}
+            />
+
+            {/* Latest Manga Section */}
+            <section className="animate-fadeIn">
+                <div className="flex items-center justify-between mb-6">
+                    <h2
+                        className="text-xl font-bold flex items-center gap-2"
+                        style={{ color: 'var(--text-primary)' }}
+                    >
+                        <Flame className="text-[var(--accent-error)]" /> Manga Terbaru
+                    </h2>
+                    <Link
+                        href="/explore"
+                        className="text-sm hover:underline flex items-center gap-1 group"
+                        style={{ color: 'var(--accent-primary)' }}
+                    >
+                        Lihat Semua <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                </div>
+
+                {/* Source Tabs */}
+                <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none">
+                    {sources.map((source) => (
+                        <button
+                            key={source.id}
+                            onClick={() => setCurrentSource(source.id)}
+                            className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2"
+                            style={{
+                                background: currentSource === source.id
+                                    ? 'var(--accent-primary)'
+                                    : 'var(--bg-surface)',
+                                color: currentSource === source.id
+                                    ? 'var(--kotatsu-on-primary)'
+                                    : 'var(--text-secondary)',
+                                border: `1px solid ${currentSource === source.id
+                                    ? 'transparent'
+                                    : 'var(--border-default)'}`,
+                                opacity: source.status !== 'active' ? 0.7 : 1,
+                            }}
+                        >
+                            {source.name}
+                            {source.status === 'timeout' && <Timer size={14} className="text-[var(--accent-warning)]" />}
+                            {source.status === 'blocked' && <Ban size={14} className="text-[var(--accent-error)]" />}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Loading State */}
+                {loading && (
+                    <div className="flex justify-center py-16 animate-pulse">
+                        <div className="flex flex-col items-center gap-4">
+                            <div
+                                className="w-10 h-10 rounded-full animate-spin"
+                                style={{
+                                    border: '3px solid var(--bg-surface)',
+                                    borderTopColor: 'var(--accent-primary)',
+                                }}
+                            />
+                            <p className="text-sm text-[var(--text-muted)]">Memuat manga...</p>
                         </div>
                     </div>
-                </div>
-            </header>
-
-            <main className="container mx-auto px-4 py-8">
-                {/* History Section - Shown First */}
-                {mounted && history.length > 0 && (
-                    <section className="mb-10">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                                🕐 Lanjut Membaca
-                            </h2>
-                            <Link
-                                href="/library"
-                                className="text-purple-400 hover:text-purple-300 text-sm"
-                            >
-                                Lihat Semua →
-                            </Link>
-                        </div>
-
-                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-purple-500/50">
-                            {history.slice(0, 10).map((item) => (
-                                <Link
-                                    key={`${item.mangaId}-${item.source}`}
-                                    href={`/read/${item.source}/${item.mangaId}/${item.chapterId}`}
-                                    className="flex-shrink-0 w-36 group"
-                                >
-                                    <div className="relative rounded-xl overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-purple-500/50 transition-all">
-                                        <div className="aspect-[3/4] bg-slate-700 overflow-hidden">
-                                            {item.mangaCover ? (
-                                                <img
-                                                    src={item.mangaCover}
-                                                    alt={item.mangaTitle}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                    onError={(e) => {
-                                                        e.currentTarget.style.display = 'none';
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-3xl">📖</div>
-                                            )}
-                                        </div>
-
-                                        {/* Source Badge */}
-                                        <span className={`absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-medium rounded text-white ${getSourceColor(item.source)}`}>
-                                            {item.source}
-                                        </span>
-
-                                        {/* Progress Overlay */}
-                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2">
-                                            <p className="text-white text-xs font-medium">Ch. {item.chapterNumber}</p>
-                                            <p className="text-slate-400 text-[10px]">{formatTimeAgo(item.lastReadAt)}</p>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-sm text-slate-300 mt-2 line-clamp-2 group-hover:text-purple-300 transition-colors">
-                                        {item.mangaTitle}
-                                    </h3>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
                 )}
 
-                {/* Latest Manga Section */}
-                <section>
-                    <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                        🔥 Manga Terbaru
-                    </h2>
-
-                    {/* Source Selector */}
-                    <div className="flex flex-wrap gap-3 mb-6">
-                        {sources.map((source) => (
-                            <button
-                                key={source.id}
-                                onClick={() => setCurrentSource(source.id)}
-                                className={`
-                                    px-6 py-3 rounded-xl font-medium transition-all duration-300
-                                    ${currentSource === source.id
-                                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30'
-                                        : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border border-slate-700'
-                                    }
-                                    ${source.status !== 'active' ? 'opacity-60' : ''}
-                                `}
-                            >
-                                {source.name}
-                                {source.status === 'timeout' && <span className="ml-2 text-xs text-yellow-400">⏱️</span>}
-                                {source.status === 'blocked' && <span className="ml-2 text-xs text-red-400">🚫</span>}
-                            </button>
-                        ))}
+                {/* Error State */}
+                {error && !loading && (
+                    <div
+                        className="rounded-xl p-6 text-center animate-scaleIn"
+                        style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                        }}
+                    >
+                        <div className="flex justify-center mb-2">
+                            <AlertCircle className="text-[var(--accent-error)]" size={32} />
+                        </div>
+                        <p className="mb-2 font-medium" style={{ color: 'var(--accent-error)' }}>
+                            {error}
+                        </p>
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                            Website mungkin diblokir ISP atau sedang tidak tersedia.
+                        </p>
+                        <button
+                            onClick={() => fetchManga(currentSource)}
+                            className="mt-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[var(--accent-error)] hover:text-white"
+                            style={{ color: 'var(--accent-error)', border: '1px solid currentColor' }}
+                        >
+                            Coba Lagi
+                        </button>
                     </div>
+                )}
 
-                    {/* Loading State */}
-                    {loading && (
-                        <div className="flex justify-center items-center py-20">
-                            <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                {/* Manga Grid */}
+                {!loading && !error && mangaList.length > 0 && (
+                    <div className="animate-fadeInUp">
+                        <p className="mb-4 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                            Menampilkan <span style={{ color: 'var(--accent-primary)' }}>{mangaList.length}</span> manga
+                        </p>
+
+                        <MangaGrid variant={viewMode}>
+                            {mangaList.map((manga, index) => (
+                                <div key={manga.id || manga.slug || index} className="animate-fadeInUp" style={{ animationDelay: `${index * 50}ms` }}>
+                                    <MangaCard
+                                        id={manga.id || manga.slug}
+                                        title={manga.title}
+                                        cover={manga.cover}
+                                        source={currentSource}
+                                        variant={viewMode}
+                                        href={`/manga/${currentSource}/${manga.id || manga.slug}`}
+                                    />
+                                </div>
+                            ))}
+                        </MangaGrid>
+                    </div>
+                )}
+
+                {/* Empty State */}
+                {!loading && !error && mangaList.length === 0 && (
+                    <div className="text-center py-16 animate-fadeIn">
+                        <div className="w-16 h-16 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
+                            <Search size={32} className="text-[var(--text-muted)] opacity-50" />
                         </div>
-                    )}
-
-                    {/* Error State */}
-                    {error && !loading && (
-                        <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
-                            <p className="text-red-400 text-lg mb-2">❌ {error}</p>
-                            <p className="text-slate-400 text-sm">
-                                Kemungkinan website diblokir oleh ISP atau sedang tidak tersedia.
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Manga Grid */}
-                    {!loading && !error && mangaList.length > 0 && (
-                        <>
-                            <p className="text-slate-400 mb-6">
-                                Menampilkan <span className="text-purple-400 font-semibold">{mangaList.length}</span> manga dari{' '}
-                                <span className="text-pink-400 font-semibold">{currentSource}</span>
-                            </p>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                                {mangaList.map((manga, index) => (
-                                    <Link
-                                        key={manga.id || manga.slug || index}
-                                        href={getMangaDetailUrl(manga, currentSource)}
-                                        className="group relative rounded-xl overflow-hidden bg-slate-800/50 border border-slate-700/50 
-                                                  hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10
-                                                  hover:-translate-y-1"
-                                    >
-                                        {/* Cover Image */}
-                                        <div className="aspect-[3/4] bg-slate-700 overflow-hidden">
-                                            {manga.cover ? (
-                                                <img
-                                                    src={manga.cover}
-                                                    alt={manga.title}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                    onError={(e) => {
-                                                        e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23374151" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14">No Image</text></svg>';
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-slate-500">
-                                                    📖
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Status Badge */}
-                                        {manga.status && (
-                                            <span className={`absolute top-2 left-2 px-2 py-1 text-xs font-medium rounded-lg
-                                                ${manga.status === 'Ongoing' ? 'bg-green-500/80 text-white' :
-                                                    manga.status === 'Completed' ? 'bg-blue-500/80 text-white' :
-                                                        'bg-yellow-500/80 text-black'}`}>
-                                                {manga.status}
-                                            </span>
-                                        )}
-
-                                        {/* Source Badge - NEW! */}
-                                        <span className={`absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-medium rounded text-white ${getSourceColor(currentSource)}`}>
-                                            {currentSource}
-                                        </span>
-
-                                        {/* Title */}
-                                        <div className="p-3">
-                                            <h3 className="text-sm font-medium text-slate-200 line-clamp-2 group-hover:text-purple-300 transition-colors">
-                                                {manga.title}
-                                            </h3>
-                                            {manga.genres && manga.genres.length > 0 && (
-                                                <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                                                    {manga.genres.slice(0, 2).join(', ')}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </>
-                    )}
-
-                    {/* Empty State */}
-                    {!loading && !error && mangaList.length === 0 && (
-                        <div className="text-center py-20">
-                            <p className="text-slate-400 text-lg">Tidak ada manga ditemukan.</p>
-                        </div>
-                    )}
-                </section>
-            </main>
-
-            {/* Footer */}
-            <footer className="border-t border-slate-800 py-6 mt-12">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-slate-500 text-sm">
-                        Kotatsu Web Clone • Data dari berbagai sumber manga Indonesia
-                    </p>
-                </div>
-            </footer>
+                        <p style={{ color: 'var(--text-muted)' }}>
+                            Tidak ada manga ditemukan.
+                        </p>
+                    </div>
+                )}
+            </section>
         </div>
     );
 }

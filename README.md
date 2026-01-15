@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kotatsu Web - Reader Komik Modern
 
-## Getting Started
+Web aplikasi modern untuk membaca komik (Manga/Manhwa/Manhua) dengan antarmuka yang bersih, responsif, dan performa tinggi. Proyek ini dibangun sebagai front-end reader yang mengambil sumber data dari berbagai situs komik (Scraper).
 
-First, run the development server:
+## 🛠️ Teknologi & Bahasa Pemrograman
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Web ini dibangun menggunakan **TypeScript** sebagai bahasa utama, berjalan di atas framework **Next.js**.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Tech Stack Utama
+*   **Bahasa**: TypeScript, HTML, CSS
+*   **Framework**: Next.js 16 (React 19)
+*   **Styling**: Tailwind CSS v4
+*   **Runtime**: Node.js
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📚 Library yang Digunakan
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Berikut adalah detail library yang digunakan untuk menunjang fitur-fitur UI/UX premium di web ini:
 
-## Learn More
+### Core & Data
+*   **`axios`**: Melakukan HTTP request ke sumber komik.
+*   **`cheerio`**: Parsing HTML (Scraping) untuk mengambil data chapter dan gambar dari website target.
+*   **`@tanstack/react-query`**: Library untuk data fetching dan caching client-side. Menyediakan caching otomatis, background refetching, dan state management untuk async data.
+*   **`dayjs`**: Library manipulasi tanggal/waktu yang sangat ringan (2kB). Dengan plugin `relativeTime`, menampilkan waktu relatif seperti "5 menit yang lalu" atau "Baru saja".
+*   **`zod`**: Schema validation untuk memastikan data dari scraper sesuai format yang diharapkan. Mencegah crash akibat perubahan struktur HTML di situs sumber.
+*   **`react-hook-form`**: Library form handling dengan performa tinggi. Meminimalisir re-render saat user mengetik, menjaga FPS tetap tinggi. Terintegrasi dengan Zod via `@hookform/resolvers`.
 
-To learn more about Next.js, take a look at the following resources:
+### User Interface (UI)
+*   **`lucide-react`**: Koleksi ikon SVG yang konsisten dan ringan.
+*   **`react-hot-toast`**: Menampilkan notifikasi (Toast) yang cantik dan tidak mengganggu.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### UX Enhancements (Peningkatan Pengalaman)
+*   **`lenis`**: Memberikan efek *Smooth Scrolling* berbasis fisika agar scroll terasa mahal dan mulus di semua device.
+*   **`overlayscrollbars-react`**: Mengganti scrollbar browser bawaan dengan custom scrollbar yang minimalis dan bertema gelap (OverlayScrollbars).
+*   **`@formkit/auto-animate`**: Memberikan animasi otomatis yang halus saat ada perubahan pada list (seperti grid manga atau daftar chapter).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Performance Optimization (Optimasi Performa)
+*   **`million`**: React Virtual DOM compiler yang membuat komponen React hingga 70% lebih cepat menggunakan teknik *Block Virtual DOM*. Mengubah kompleksitas update dari O(n) menjadi O(1).
 
-## Deploy on Vercel
+### Reader Optimization (Fitur Baca)
+*   **`vanilla-lazyload`**: Memuat gambar hanya saat dibutuhkan (Lazy Loading) untuk menghemat data dan mempercepat loading halaman panjang.
+*   **`react-cool-inview`**: Mendeteksi chapter mana yang sedang dibaca pengguna secara akurat untuk memperbarui History dan URL secara otomatis.
+*   **`@use-gesture/react`**: Menangani interaksi sentuh, seperti fitur *Swipe* untuk ganti chapter.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚀 Fitur Unggulan
+1.  **Immersive Reader**: Mode baca Webtoon (Scroll) dan Pager (Per halaman) dengan fokus penuh pada konten.
+2.  **Smooth Experience**: Navigasi dan scroll yang sangat mulus berkat Lenis dan optimasi React.
+3.  **Smart History**: Otomatis menyimpan progress bacaan terakhir.
+4.  **Responsive**: Tampilan yang menyesuaikan dengan sempurna baik di HP, Tablet, maupun Laptop.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Dibuat untuk pengalaman membaca yang lebih baik.*

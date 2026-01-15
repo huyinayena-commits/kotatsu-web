@@ -1,9 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Settings, BookOpen, AlertCircle, Loader2 } from 'lucide-react';
+import { useDrag } from '@use-gesture/react';
+import toast from 'react-hot-toast';
+import LazyLoad from 'vanilla-lazyload';
+
 import { addToHistory, markChapterAsRead, getLastRead, updateHistoryPage } from '@/lib/storage';
+import { PagerReader, ReaderSettings, ChapterItem } from '@/components/reader';
 
 interface PageData {
     index: number;
@@ -29,259 +35,308 @@ interface APIResponse {
     error?: string;
 }
 
+type ReaderMode = 'webtoon' | 'pager';
+
 export default function ReaderPage() {
     const params = useParams();
-    const mangaId = params.mangaId as string;
-    const chapterId = params.chapterId as string;
+    const router = useRouter(); // Need router for navigation
+    const initialMangaId = params.mangaId as string;
+    const initialChapterId = params.chapterId as string;
 
-    const [chapter, setChapter] = useState<ChapterInfo | null>(null);
-    const [pages, setPages] = useState<PageData[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Store all loaded chapters
+    const [chapters, setChapters] = useState<{ info: ChapterInfo; pages: PageData[] }[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [loadingNext, setLoadingNext] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showControls, setShowControls] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [showSettings, setShowSettings] = useState(false);
+    const [readerMode, setReaderMode] = useState<ReaderMode>('webtoon');
+    const [scrollSpeed, setScrollSpeed] = useState(2); // Default 2x
 
-    // Overscroll navigation state
-    const [overscrollMessage, setOverscrollMessage] = useState<string | null>(null);
-    const overscrollCount = useRef(0);
-    const overscrollTimer = useRef<NodeJS.Timeout | null>(null);
-    const isNavigating = useRef(false);
+    // Track current active chapter for URL/History updates
+    const [activeChapterId, setActiveChapterId] = useState<string>(initialChapterId);
+    const [currentPage, setCurrentPage] = useState(0);
 
-    // Page preloading state
-    const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
-    const [prefetchedPages, setPrefetchedPages] = useState<Set<number>>(new Set());
+    // Ref for scroll container
+    const mainContainerRef = useRef<HTMLDivElement>(null);
 
-    // Saved page position for resume reading
-    const [savedPagePosition, setSavedPagePosition] = useState<number | null>(null);
-    const hasScrolledToSavedPosition = useRef(false);
-    const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+    // Refs for observers
+    const observerTarget = useRef<HTMLDivElement>(null);
+    const visibilityMap = useRef<{ [key: string]: number }>({});
 
-    // Auto-hide controls after 3 seconds
+
+    // Library instances refs
+    const lazyLoadInstance = useRef<any>(null);
+
+    // Load saved reader mode and scroll speed preference
     useEffect(() => {
-        if (showControls) {
-            const timer = setTimeout(() => setShowControls(false), 3000);
-            return () => clearTimeout(timer);
+        const savedMode = localStorage.getItem('readerMode') as ReaderMode;
+        if (savedMode) setReaderMode(savedMode);
+
+        const savedScrollSpeed = localStorage.getItem('scrollSpeed');
+        if (savedScrollSpeed) setScrollSpeed(parseFloat(savedScrollSpeed));
+    }, []);
+
+    // Custom wheel scroll handler for speed multiplier
+    useEffect(() => {
+        if (readerMode !== 'webtoon' || scrollSpeed <= 1) return;
+
+        const handleWheel = (e: WheelEvent) => {
+            // Only apply custom scroll if not in a scrollable child element
+            if (e.ctrlKey || e.metaKey) return; // Allow zoom
+
+            e.preventDefault();
+            const delta = e.deltaY * scrollSpeed;
+            window.scrollBy({ top: delta, behavior: 'auto' });
+        };
+
+        window.addEventListener('wheel', handleWheel, { passive: false });
+        return () => window.removeEventListener('wheel', handleWheel);
+    }, [scrollSpeed, readerMode]);
+
+    // Initial load
+    useEffect(() => {
+        // Reset chapters if initial ID doesn't match loaded content (navigation from outside)
+        if (chapters.length === 0 || (chapters[0] && chapters[0].info.id !== initialChapterId && !chapters.some(c => c.info.id === initialChapterId))) {
+            setChapters([]);
+            loadChapter(initialChapterId, true);
+        } else if (chapters.some(c => c.info.id === initialChapterId)) {
+            // If we already have the chapter, just ensure it's set as active (e.g. back navigation)
+            setActiveChapterId(initialChapterId);
         }
-    }, [showControls]);
+    }, [initialChapterId]);
 
-    // Fetch chapter data
+    // Initialize Libraries (LazyLoad)
     useEffect(() => {
-        if (chapterId) {
-            // First check if there's a saved position for this chapter
-            const lastRead = getLastRead(mangaId, 'shinigami');
-            if (lastRead && lastRead.chapterId === chapterId && lastRead.lastReadPage) {
-                setSavedPagePosition(lastRead.lastReadPage);
-            } else {
-                setSavedPagePosition(null);
-            }
-            hasScrolledToSavedPosition.current = false;
-            fetchChapter();
-        }
-    }, [chapterId, mangaId]);
+        // Initialize LazyLoad only on client side
+        if (typeof window === 'undefined') return;
 
-    // Scroll to saved position after pages are loaded
-    useEffect(() => {
-        if (savedPagePosition !== null && pages.length > 0 && !hasScrolledToSavedPosition.current && !loading) {
-            // Wait a bit for images to render
-            const timer = setTimeout(() => {
-                const targetPage = pageRefs.current[savedPagePosition];
-                if (targetPage) {
-                    targetPage.scrollIntoView({ behavior: 'auto', block: 'start' });
-                    hasScrolledToSavedPosition.current = true;
-                    setCurrentPage(savedPagePosition + 1);
+        if (!lazyLoadInstance.current) {
+            lazyLoadInstance.current = new LazyLoad({
+                elements_selector: ".lazy",
+                callback_loaded: (el) => {
+                    el.classList.add('loaded');
                 }
-            }, 500);
-            return () => clearTimeout(timer);
+            });
         }
-    }, [savedPagePosition, pages.length, loading]);
 
-    const fetchChapter = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(`/api/sources/shinigami/chapter/${chapterId}`);
-            const data: APIResponse = await response.json();
-
-            if (data.success) {
-                setChapter(data.chapter);
-                setPages(data.pages);
-
-                // Initialize page refs array
-                pageRefs.current = new Array(data.pages.length).fill(null);
-
-                // AUTO-SAVE HISTORY dengan data lengkap
-                // Ini akan UPDATE history jika manga sudah ada (bukan duplikat)
-                addToHistory({
-                    mangaId: data.chapter.mangaId || mangaId,
-                    mangaTitle: data.chapter.mangaTitle || 'Unknown',
-                    mangaCover: data.chapter.mangaCover || '',
-                    source: 'shinigami',
-                    chapterId: data.chapter.id,
-                    chapterNumber: data.chapter.chapterNumber,
-                    chapterTitle: data.chapter.chapterTitle,
-                });
-
-                // Mark chapter as read
-                markChapterAsRead(data.chapter.mangaId || mangaId, 'shinigami', chapterId);
-            } else {
-                setError(data.error || 'Gagal memuat chapter');
+        return () => {
+            // Safely destroy LazyLoad instance
+            try {
+                if (lazyLoadInstance.current && typeof lazyLoadInstance.current.destroy === 'function') {
+                    lazyLoadInstance.current.destroy();
+                }
+            } catch (e) {
+                // Ignore errors during cleanup
             }
-        } catch (err) {
-            setError('Terjadi kesalahan saat memuat chapter');
-        } finally {
-            setLoading(false);
+            lazyLoadInstance.current = null;
+        };
+    }, []);
+
+    // Update Libraries when chapters change
+    useEffect(() => {
+        // Safely update LazyLoad instance
+        try {
+            if (lazyLoadInstance.current && typeof lazyLoadInstance.current.update === 'function') {
+                lazyLoadInstance.current.update();
+            }
+        } catch (e) {
+            // Ignore errors during update
+        }
+    }, [chapters, readerMode]);
+
+    // Handle visibility updates from ChapterItem
+    const handleChapterVisibility = (chapterId: string, ratio: number) => {
+        visibilityMap.current[chapterId] = ratio;
+
+        // Find chapter with highest ratio
+        let maxRatio = 0;
+        let maxId = activeChapterId;
+
+        Object.entries(visibilityMap.current).forEach(([id, r]) => {
+            if (r > maxRatio) {
+                maxRatio = r;
+                maxId = id;
+            }
+        });
+
+        if (maxId && maxId !== activeChapterId && maxRatio > 0.1) {
+            setActiveChapterId(maxId);
+
+            const newUrl = `/read/shinigami/${initialMangaId}/${maxId}`;
+            window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+
+            const chapter = chapters.find(c => c.info.id === maxId);
+            if (chapter) {
+                addToHistory({
+                    mangaId: chapter.info.mangaId || initialMangaId,
+                    mangaTitle: chapter.info.mangaTitle || 'Unknown',
+                    mangaCover: chapter.info.mangaCover || '',
+                    source: 'shinigami',
+                    chapterId: chapter.info.id,
+                    chapterNumber: chapter.info.chapterNumber,
+                    chapterTitle: chapter.info.chapterTitle,
+                });
+                markChapterAsRead(chapter.info.mangaId || initialMangaId, 'shinigami', maxId);
+            }
         }
     };
 
-    // Track scroll position and save to history
-    const savePagePositionTimer = useRef<NodeJS.Timeout | null>(null);
+    // Gestures (Swipe to Navigate)
+    const bind = useDrag(({ active, movement: [mx], cancel }) => {
+        if (active && Math.abs(mx) > 100) {
+            const activeChapter = chapters.find(c => c.info.id === activeChapterId);
+            if (!activeChapter) return;
 
-    const handleScroll = useCallback(() => {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const scrollPercent = scrollTop / docHeight;
-        const estimatedPage = Math.ceil(scrollPercent * pages.length) || 1;
-        const newPage = Math.min(estimatedPage, pages.length);
-        setCurrentPage(newPage);
-
-        // Debounced save to history (save after 1 second of no scrolling)
-        if (savePagePositionTimer.current) {
-            clearTimeout(savePagePositionTimer.current);
-        }
-        savePagePositionTimer.current = setTimeout(() => {
-            if (chapter) {
-                updateHistoryPage(chapter.mangaId || mangaId, 'shinigami', chapterId, newPage - 1);
-            }
-        }, 1000);
-    }, [pages.length, chapter, mangaId, chapterId]);
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            // Clear pending save on unmount
-            if (savePagePositionTimer.current) {
-                clearTimeout(savePagePositionTimer.current);
-            }
-        };
-    }, [handleScroll]);
-
-    // Handle page loaded
-    const handlePageLoaded = useCallback((pageIndex: number) => {
-        setLoadedPages(prev => new Set([...prev, pageIndex]));
-    }, []);
-
-    // Prefetch upcoming pages
-    useEffect(() => {
-        if (pages.length === 0) return;
-
-        const prefetchAhead = 5; // Prefetch 5 pages ahead
-        const startPrefetch = currentPage;
-        const endPrefetch = Math.min(currentPage + prefetchAhead, pages.length);
-
-        for (let i = startPrefetch; i < endPrefetch; i++) {
-            if (!prefetchedPages.has(i)) {
-                const img = new Image();
-                img.src = pages[i].url;
-                img.onload = () => {
-                    setPrefetchedPages(prev => new Set([...prev, i]));
-                };
+            if (mx > 0) {
+                // Swipe Right -> Prev
+                if (activeChapter.info.prevChapterId) {
+                    goToChapter(activeChapter.info.prevChapterId);
+                    cancel();
+                }
+            } else {
+                // Swipe Left -> Next
+                if (activeChapter.info.nextChapterId) {
+                    goToChapter(activeChapter.info.nextChapterId);
+                    cancel();
+                }
             }
         }
-    }, [currentPage, pages, prefetchedPages]);
+    }, {
+        axis: 'x',
+        filterTaps: true,
+        // bgSwipe: true // deprecated or not needed if attached to container
+    });
 
-    // Keyboard navigation
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' && chapter?.prevChapterId) {
-                window.location.href = `/read/shinigami/${mangaId}/${chapter.prevChapterId}`;
-            } else if (e.key === 'ArrowRight' && chapter?.nextChapterId) {
-                window.location.href = `/read/shinigami/${mangaId}/${chapter.nextChapterId}`;
+    const loadChapter = async (id: string, isInitial: boolean = false) => {
+        if (isInitial) setLoading(true);
+        else setLoadingNext(true);
+
+        try {
+            // Check if already loaded
+            if (chapters.some(c => c.info.id === id)) {
+                if (isInitial) setLoading(false);
+                else setLoadingNext(false);
+                return;
             }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [chapter, mangaId]);
 
-    // Overscroll navigation - auto navigate to prev/next chapter
-    useEffect(() => {
-        const handleWheel = (e: WheelEvent) => {
-            if (isNavigating.current || !chapter) return;
+            const response = await fetch(`/api/sources/shinigami/chapter/${id}`);
+            const data: APIResponse = await response.json();
 
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const isAtTop = scrollTop <= 0;
-            const isAtBottom = scrollTop >= docHeight - 10;
+            if (data.success) {
+                setChapters(prev => {
+                    if (prev.some(c => c.info.id === data.chapter.id)) return prev;
+                    return [...prev, { info: data.chapter, pages: data.pages }];
+                });
 
-            // Scrolling up at top
-            if (e.deltaY < 0 && isAtTop && chapter.prevChapterId) {
-                overscrollCount.current++;
-                setOverscrollMessage(`Scroll ${2 - overscrollCount.current}x lagi untuk chapter sebelumnya`);
+                if (isInitial) {
+                    setActiveChapterId(data.chapter.id);
 
-                if (overscrollCount.current >= 2) {
-                    isNavigating.current = true;
-                    setOverscrollMessage('Pindah ke chapter sebelumnya...');
-                    setTimeout(() => {
-                        window.location.href = `/read/shinigami/${mangaId}/${chapter.prevChapterId}`;
-                    }, 300);
+                    addToHistory({
+                        mangaId: data.chapter.mangaId || initialMangaId,
+                        mangaTitle: data.chapter.mangaTitle || 'Unknown',
+                        mangaCover: data.chapter.mangaCover || '',
+                        source: 'shinigami',
+                        chapterId: data.chapter.id,
+                        chapterNumber: data.chapter.chapterNumber,
+                        chapterTitle: data.chapter.chapterTitle,
+                    });
+
+                    // Recover last page position logic could go here
+                    const lastRead = getLastRead(initialMangaId, 'shinigami');
+                    if (lastRead?.chapterId === id && lastRead.lastReadPage) {
+                        setCurrentPage(lastRead.lastReadPage);
+                    }
+
+                    markChapterAsRead(data.chapter.mangaId || initialMangaId, 'shinigami', id);
+                } else {
+                    toast.success(`Chapter ${data.chapter.chapterNumber} loaded`, {
+                        position: 'bottom-center',
+                        style: { background: 'var(--bg-elevated)', color: 'var(--text-primary)' }
+                    });
                 }
-
-                // Reset counter after 1 second of no scroll
-                if (overscrollTimer.current) clearTimeout(overscrollTimer.current);
-                overscrollTimer.current = setTimeout(() => {
-                    overscrollCount.current = 0;
-                    setOverscrollMessage(null);
-                }, 1000);
+            } else {
+                if (isInitial) setError(data.error || 'Gagal memuat chapter');
+                else toast.error('Gagal memuat chapter selanjutnya');
             }
-            // Scrolling down at bottom
-            else if (e.deltaY > 0 && isAtBottom && chapter.nextChapterId) {
-                overscrollCount.current++;
-                setOverscrollMessage(`Scroll ${2 - overscrollCount.current}x lagi untuk chapter selanjutnya`);
+        } catch {
+            if (isInitial) setError('Terjadi kesalahan saat memuat chapter');
+        } finally {
+            if (isInitial) setLoading(false);
+            else setLoadingNext(false);
+        }
+    };
 
-                if (overscrollCount.current >= 2) {
-                    isNavigating.current = true;
-                    setOverscrollMessage('Pindah ke chapter selanjutnya...');
-                    setTimeout(() => {
-                        window.location.href = `/read/shinigami/${mangaId}/${chapter.nextChapterId}`;
-                    }, 300);
+    // Infinite Scroll Observer (Load Next)
+    useEffect(() => {
+        if (readerMode !== 'webtoon') return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !loadingNext && !loading) {
+                    const lastChapter = chapters[chapters.length - 1];
+                    if (lastChapter?.info.nextChapterId) {
+                        loadChapter(lastChapter.info.nextChapterId);
+                    }
                 }
+            },
+            { rootMargin: '600px' }
+        );
 
-                // Reset counter after 1 second of no scroll
-                if (overscrollTimer.current) clearTimeout(overscrollTimer.current);
-                overscrollTimer.current = setTimeout(() => {
-                    overscrollCount.current = 0;
-                    setOverscrollMessage(null);
-                }, 1000);
-            }
-            // Not at boundary - hide message
-            else if (!isAtTop && !isAtBottom) {
-                overscrollCount.current = 0;
-                setOverscrollMessage(null);
-            }
-        };
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
 
-        window.addEventListener('wheel', handleWheel, { passive: true });
-        return () => window.removeEventListener('wheel', handleWheel);
-    }, [chapter, mangaId]);
+        return () => observer.disconnect();
+    }, [chapters, loading, loadingNext, readerMode]);
 
-    if (loading) {
+
+
+    // Save page position logic can be simplified or omitted for infinite scroll to avoid complexity
+    // We already save chapter progress in the observer above.
+
+    // Auto-hide controls
+    useEffect(() => {
+        if (showControls && !showSettings) {
+            const timer = setTimeout(() => setShowControls(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [showControls, showSettings]);
+
+    // Helpers
+    const handleModeChange = (mode: ReaderMode) => {
+        setReaderMode(mode);
+        localStorage.setItem('readerMode', mode);
+        setShowSettings(false);
+    };
+
+    const goToChapter = (id: string | null) => {
+        if (id) router.push(`/read/shinigami/${initialMangaId}/${id}`);
+    };
+
+    const activeChapterData = chapters.find(c => c.info.id === activeChapterId) || chapters[0];
+
+    // Initial Loading State
+    if (loading && chapters.length === 0) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: '#000' }}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-400">Memuat halaman...</p>
+                    <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-[var(--accent-primary)]" />
+                    <p style={{ color: 'var(--text-muted)' }}>Memuat chapter...</p>
                 </div>
             </div>
         );
     }
 
-    if (error || !chapter) {
+    if (error || !activeChapterData) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: '#000' }}>
                 <div className="text-center">
-                    <p className="text-red-400 text-xl mb-4">❌ {error || 'Chapter tidak ditemukan'}</p>
-                    <Link href={`/manga/shinigami/${mangaId}`} className="text-purple-400 hover:text-purple-300 underline">
-                        ← Kembali ke Detail Manga
+                    <p style={{ color: 'var(--accent-error)' }} className="text-xl mb-4 flex items-center justify-center gap-2">
+                        <AlertCircle /> {error || 'Chapter tidak ditemukan'}
+                    </p>
+                    <Link href={`/manga/shinigami/${initialMangaId}`} style={{ color: 'var(--accent-primary)' }} className="flex items-center justify-center gap-2">
+                        <ChevronLeft size={20} /> Kembali ke Detail
                     </Link>
                 </div>
             </div>
@@ -290,147 +345,138 @@ export default function ReaderPage() {
 
     return (
         <div
-            className="min-h-screen bg-black"
-            onClick={() => setShowControls(!showControls)}
+            className="min-h-screen relative"
+            style={{ background: '#000' }}
+            {...bind()}
         >
-            {/* Overscroll Navigation Message */}
-            {overscrollMessage && (
-                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-purple-600/90 backdrop-blur-lg text-white rounded-full text-sm font-medium shadow-lg animate-pulse">
-                    {overscrollMessage}
-                </div>
-            )}
-
-            {/* Loading Progress Bar */}
-            {pages.length > 0 && loadedPages.size < pages.length && (
-                <div className="fixed top-0 left-0 right-0 z-[60] h-1 bg-slate-800">
-                    <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                        style={{ width: `${(loadedPages.size / pages.length) * 100}%` }}
-                    />
-                </div>
-            )}
-
-            {/* Top Navigation Bar */}
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : '-translate-y-full'
-                    }`}
+                className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : '-translate-y-full'}`}
             >
-                <div className="bg-slate-900/95 backdrop-blur-lg border-b border-slate-700/50 px-4 py-3">
-                    <div className="container mx-auto flex items-center justify-between">
-                        <Link
-                            href={`/manga/shinigami/${mangaId}`}
-                            className="text-purple-400 hover:text-purple-300 flex items-center gap-2"
-                            onClick={(e) => e.stopPropagation()}
+                <div
+                    className="px-4 py-3 flex items-center justify-between"
+                    style={{ background: 'rgba(0,0,0,0.9)', borderBottom: '1px solid var(--border-default)' }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <Link
+                        href={`/manga/shinigami/${initialMangaId}`}
+                        className="p-2 rounded-lg hover:bg-white/10"
+                        style={{ color: 'var(--text-primary)' }}
+                    >
+                        <ChevronLeft size={24} />
+                    </Link>
+
+                    <div className="flex-1 text-center px-4">
+                        <h1 className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                            {activeChapterData.info.mangaTitle}
+                        </h1>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {activeChapterData.info.chapterTitle}
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {readerMode === 'pager' && (
+                            <span className="text-xs mr-2" style={{ color: 'var(--text-muted)' }}>
+                                {currentPage + 1}/{activeChapterData.pages.length}
+                            </span>
+                        )}
+                        <button
+                            onClick={() => setShowSettings(true)}
+                            className="p-2 rounded-lg hover:bg-white/10"
+                            style={{ color: 'var(--text-primary)' }}
                         >
-                            <span>←</span>
-                            <span className="hidden sm:inline">Kembali</span>
-                        </Link>
-
-                        <div className="text-center flex-1 px-4">
-                            <h1 className="text-white font-medium text-sm sm:text-base truncate">
-                                {chapter.mangaTitle}
-                            </h1>
-                            <p className="text-slate-400 text-xs sm:text-sm">
-                                Chapter {chapter.chapterNumber}
-                            </p>
-                        </div>
-
-                        <div className="text-slate-400 text-sm">
-                            {currentPage}/{chapter.totalPages}
-                        </div>
+                            <Settings size={20} />
+                        </button>
                     </div>
                 </div>
             </header>
 
-            {/* Image Container */}
-            <main className="flex flex-col items-center">
-                {pages.map((page, index) => (
-                    <div
-                        key={page.index}
-                        className="relative w-full max-w-4xl"
-                        ref={(el) => { pageRefs.current[index] = el; }}
-                    >
-                        {/* Loading placeholder */}
-                        {!loadedPages.has(index) && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                                <div className="text-center">
-                                    <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                                    <p className="text-slate-500 text-sm">Halaman {index + 1}</p>
-                                </div>
-                            </div>
-                        )}
-                        <img
-                            src={page.url}
-                            alt={`Page ${page.index}`}
-                            className={`w-full ${!loadedPages.has(index) ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-                            loading="lazy"
-                            onLoad={() => handlePageLoaded(index)}
-                            onError={(e) => {
-                                e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200"><rect fill="%231a1a2e" width="800" height="1200"/><text x="400" y="600" text-anchor="middle" dy=".3em" fill="%236b7280" font-size="24">Gagal memuat gambar</text></svg>';
-                                handlePageLoaded(index);
-                            }}
+            {readerMode === 'pager' ? (
+                <PagerReader
+                    pages={activeChapterData.pages}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                    onTap={() => setShowControls(!showControls)}
+                />
+            ) : (
+                <main
+                    className="flex flex-col items-center pt-14 pb-10"
+                    onClick={() => setShowControls(!showControls)}
+                >
+                    {chapters.map((chapter) => (
+                        <ChapterItem
+                            key={chapter.info.id}
+                            chapter={chapter}
+                            onVisible={handleChapterVisibility}
                         />
-                    </div>
-                ))}
-            </main>
+                    ))}
 
-            {/* Bottom Navigation */}
+                    {activeChapterData?.info?.nextChapterId || loadingNext ? (
+                        <div ref={observerTarget} className="h-48 w-full flex items-center justify-center p-4">
+                            {loadingNext ? (
+                                <div className="flex flex-col items-center gap-2">
+                                    <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-primary)]" />
+                                    <span className="text-xs text-[var(--text-muted)]">Memuat chapter selanjutnya...</span>
+                                </div>
+                            ) : (
+                                <div className="h-20" />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="py-10 text-center text-[var(--text-muted)]">
+                            Selesai
+                        </div>
+                    )}
+                </main>
+            )}
+
             <footer
-                className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : 'translate-y-full'
-                    }`}
+                className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : 'translate-y-full'}`}
+                onClick={(e) => e.stopPropagation()}
             >
-                <div className="bg-slate-900/95 backdrop-blur-lg border-t border-slate-700/50 px-4 py-3">
-                    <div className="container mx-auto flex items-center justify-between gap-4">
-                        {/* Prev Chapter */}
-                        {chapter.prevChapterId ? (
-                            <Link
-                                href={`/read/shinigami/${mangaId}/${chapter.prevChapterId}`}
-                                className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-center transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                ← Prev
-                            </Link>
-                        ) : (
-                            <div className="flex-1 py-3 px-4 bg-slate-800/50 text-slate-500 rounded-xl text-center cursor-not-allowed">
-                                ← Prev
-                            </div>
-                        )}
+                <div
+                    className="px-4 py-3 flex items-center justify-between gap-3"
+                    style={{ background: 'rgba(0,0,0,0.9)', borderTop: '1px solid var(--border-default)' }}
+                >
+                    <button
+                        onClick={() => goToChapter(activeChapterData.info.prevChapterId)}
+                        disabled={!activeChapterData.info.prevChapterId}
+                        className="flex-1 py-2.5 rounded-xl text-center transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                        style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                    >
+                        <ChevronLeft size={16} /> Prev
+                    </button>
 
-                        {/* Back to Detail */}
-                        <Link
-                            href={`/manga/shinigami/${mangaId}`}
-                            className="py-3 px-6 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-center transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            📖 Daftar
-                        </Link>
+                    <Link
+                        href={`/manga/shinigami/${initialMangaId}`}
+                        className="py-2.5 px-4 rounded-xl flex items-center justify-center"
+                        style={{ background: 'var(--accent-primary)', color: 'white' }}
+                    >
+                        <BookOpen size={20} />
+                    </Link>
 
-                        {/* Next Chapter */}
-                        {chapter.nextChapterId ? (
-                            <Link
-                                href={`/read/shinigami/${mangaId}/${chapter.nextChapterId}`}
-                                className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-center transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                Next →
-                            </Link>
-                        ) : (
-                            <div className="flex-1 py-3 px-4 bg-slate-800/50 text-slate-500 rounded-xl text-center cursor-not-allowed">
-                                Next →
-                            </div>
-                        )}
-                    </div>
+                    <button
+                        onClick={() => goToChapter(activeChapterData.info.nextChapterId)}
+                        disabled={!activeChapterData.info.nextChapterId}
+                        className="flex-1 py-2.5 rounded-xl text-center transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                        style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                    >
+                        Next <ChevronRight size={16} />
+                    </button>
                 </div>
             </footer>
 
-            {/* Scroll to top hint (when at bottom) */}
-            {currentPage === pages.length && (
-                <div className="fixed bottom-24 left-0 right-0 text-center pointer-events-none">
-                    <span className="inline-block bg-slate-900/90 text-slate-300 px-4 py-2 rounded-full text-sm">
-                        {chapter.nextChapterId ? 'Tekan → untuk chapter berikutnya' : '🎉 Selesai!'}
-                    </span>
-                </div>
-            )}
+            <ReaderSettings
+                isOpen={showSettings}
+                onClose={() => setShowSettings(false)}
+                mode={readerMode}
+                onModeChange={handleModeChange}
+                scrollSpeed={scrollSpeed}
+                onScrollSpeedChange={(speed) => {
+                    setScrollSpeed(speed);
+                    localStorage.setItem('scrollSpeed', speed.toString());
+                }}
+            />
         </div>
     );
 }

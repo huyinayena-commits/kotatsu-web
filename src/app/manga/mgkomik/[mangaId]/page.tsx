@@ -46,7 +46,7 @@ interface APIResponse {
     error?: string;
 }
 
-export default function MangaDetailPage() {
+export default function MgkomikDetailPage() {
     const params = useParams();
     const mangaId = params.mangaId as string;
 
@@ -74,7 +74,7 @@ export default function MangaDetailPage() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/sources/shinigami/${mangaId}`);
+            const response = await fetch(`/api/sources/mgkomik/${mangaId}`);
             const data: APIResponse = await response.json();
             if (data.success) {
                 setManga(data.data);
@@ -89,11 +89,11 @@ export default function MangaDetailPage() {
         }
     };
 
-    const checkBookmarkStatus = () => setIsBookmarked(isInLibrary(mangaId, 'shinigami'));
-    const checkReadingHistory = () => setLastRead(getLastRead(mangaId, 'shinigami'));
+    const checkBookmarkStatus = () => setIsBookmarked(isInLibrary(mangaId, 'mgkomik'));
+    const checkReadingHistory = () => setLastRead(getLastRead(mangaId, 'mgkomik'));
 
     const updateReadChapters = (chapters: Chapter[]) => {
-        const readIds = chapters.filter(ch => isChapterRead(mangaId, 'shinigami', ch.id)).map(ch => ch.id);
+        const readIds = chapters.filter(ch => isChapterRead(mangaId, 'mgkomik', ch.id)).map(ch => ch.id);
         setReadChapterIds(readIds);
     };
 
@@ -103,14 +103,14 @@ export default function MangaDetailPage() {
 
     const handleMarkSelectedAsRead = () => {
         if (selectedChapters.length === 0) return;
-        markChaptersAsRead(mangaId, 'shinigami', selectedChapters);
+        markChaptersAsRead(mangaId, 'mgkomik', selectedChapters);
         setReadChapterIds(prev => [...new Set([...prev, ...selectedChapters])]);
         exitSelectMode();
     };
 
     const handleMarkSelectedAsUnread = () => {
         if (selectedChapters.length === 0) return;
-        markChaptersAsUnread(mangaId, 'shinigami', selectedChapters);
+        markChaptersAsUnread(mangaId, 'mgkomik', selectedChapters);
         setReadChapterIds(prev => prev.filter(id => !selectedChapters.includes(id)));
         exitSelectMode();
     };
@@ -126,14 +126,13 @@ export default function MangaDetailPage() {
             id: manga.id,
             title: manga.title,
             cover: manga.cover,
-            source: 'shinigami',
+            source: 'mgkomik',
         });
         setIsBookmarked(nowBookmarked);
     };
 
     const getFirstChapter = () => manga?.chapters[0] || null;
 
-    // Loading State
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
@@ -145,7 +144,6 @@ export default function MangaDetailPage() {
         );
     }
 
-    // Error State
     if (error || !manga) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
@@ -171,7 +169,6 @@ export default function MangaDetailPage() {
 
     return (
         <div className="min-h-screen pb-20">
-            {/* Back Header */}
             <header
                 className="sticky top-0 z-40 px-4 py-3 flex items-center gap-4"
                 style={{ background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-default)' }}
@@ -179,32 +176,20 @@ export default function MangaDetailPage() {
                 <Link href="/" className="p-2 rounded-lg hover:bg-white/10 transition-colors">
                     <span style={{ color: 'var(--text-primary)' }}>←</span>
                 </Link>
-                <h1
-                    className="font-medium truncate flex-1"
-                    style={{ color: 'var(--text-primary)' }}
-                >
+                <h1 className="font-medium truncate flex-1" style={{ color: 'var(--text-primary)' }}>
                     {manga.title}
                 </h1>
             </header>
 
             <main className="p-4 lg:p-6">
-                {/* Manga Info Section */}
                 <div className="flex flex-col sm:flex-row gap-6 mb-6">
-                    {/* Cover */}
                     <div className="flex-shrink-0 mx-auto sm:mx-0" style={{ width: '160px' }}>
                         <div
                             className="rounded-xl overflow-hidden"
-                            style={{
-                                aspectRatio: '2/3',
-                                background: 'var(--bg-surface)',
-                                border: '1px solid var(--border-default)',
-                            }}
+                            style={{ aspectRatio: '2/3', background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
                         >
                             {imageError ? (
-                                <div
-                                    className="w-full h-full flex items-center justify-center text-4xl"
-                                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}
-                                >
+                                <div className="w-full h-full flex items-center justify-center text-4xl" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
                                     {manga.title.charAt(0)}
                                 </div>
                             ) : (
@@ -218,155 +203,79 @@ export default function MangaDetailPage() {
                         </div>
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                            {manga.title}
-                        </h2>
-                        {manga.altTitle && (
-                            <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-                                {manga.altTitle}
-                            </p>
-                        )}
+                        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{manga.title}</h2>
+                        {manga.altTitle && <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>{manga.altTitle}</p>}
 
-                        {/* Status & Stats */}
                         <div className="flex flex-wrap gap-2 mb-4">
-                            <span
-                                className="px-3 py-1 rounded-full text-xs font-medium"
-                                style={{
-                                    background: manga.status === 'Ongoing'
-                                        ? 'rgba(34, 197, 94, 0.2)'
-                                        : 'rgba(59, 130, 246, 0.2)',
-                                    color: manga.status === 'Ongoing'
-                                        ? 'var(--accent-success)'
-                                        : 'var(--accent-secondary)',
-                                }}
-                            >
+                            <span className="px-3 py-1 rounded-full text-xs font-medium" style={{
+                                background: manga.status === 'Ongoing' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                                color: manga.status === 'Ongoing' ? 'var(--accent-success)' : 'var(--accent-secondary)',
+                            }}>
                                 {manga.status}
                             </span>
-                            <span
-                                className="px-3 py-1 rounded-full text-xs"
-                                style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
-                            >
+                            <span className="px-3 py-1 rounded-full text-xs" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
                                 {manga.totalChapters} Chapter
                             </span>
                             {readChapterIds.length > 0 && (
-                                <span
-                                    className="px-3 py-1 rounded-full text-xs"
-                                    style={{ background: 'rgba(168, 85, 247, 0.2)', color: 'var(--accent-primary)' }}
-                                >
+                                <span className="px-3 py-1 rounded-full text-xs" style={{ background: 'rgba(168, 85, 247, 0.2)', color: 'var(--accent-primary)' }}>
                                     {readProgress}% Dibaca
                                 </span>
                             )}
                         </div>
 
-                        {/* Meta */}
                         <div className="space-y-1 text-sm mb-4">
                             {manga.authors.length > 0 && (
-                                <p>
-                                    <span style={{ color: 'var(--text-muted)' }}>Author: </span>
-                                    <span style={{ color: 'var(--text-primary)' }}>{manga.authors.join(', ')}</span>
-                                </p>
-                            )}
-                            {manga.artists.length > 0 && (
-                                <p>
-                                    <span style={{ color: 'var(--text-muted)' }}>Artist: </span>
-                                    <span style={{ color: 'var(--text-primary)' }}>{manga.artists.join(', ')}</span>
-                                </p>
+                                <p><span style={{ color: 'var(--text-muted)' }}>Author: </span><span style={{ color: 'var(--text-primary)' }}>{manga.authors.join(', ')}</span></p>
                             )}
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex gap-3 flex-wrap">
-                            {/* Read Button */}
                             {lastRead ? (
-                                <Link
-                                    href={`/read/shinigami/${manga.id}/${lastRead.chapterId}`}
-                                    className="px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
-                                    style={{ background: 'var(--accent-primary)', color: 'white' }}
-                                >
+                                <Link href={`/read/mgkomik/${manga.id}/${lastRead.chapterId}`} className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2" style={{ background: 'var(--accent-primary)', color: 'white' }}>
                                     ▶ Lanjut Ch. {lastRead.chapterNumber}
                                 </Link>
                             ) : firstChapter ? (
-                                <Link
-                                    href={`/read/shinigami/${manga.id}/${firstChapter.id}`}
-                                    className="px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
-                                    style={{ background: 'var(--accent-primary)', color: 'white' }}
-                                >
+                                <Link href={`/read/mgkomik/${manga.id}/${firstChapter.id}`} className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2" style={{ background: 'var(--accent-primary)', color: 'white' }}>
                                     ▶ Mulai Baca
                                 </Link>
                             ) : null}
 
-                            {/* Bookmark Button */}
-                            <button
-                                onClick={handleToggleBookmark}
-                                className="px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
-                                style={{
-                                    background: isBookmarked ? 'rgba(168, 85, 247, 0.2)' : 'var(--bg-surface)',
-                                    color: isBookmarked ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                                    border: `1px solid ${isBookmarked ? 'var(--accent-primary)' : 'var(--border-default)'}`,
-                                }}
-                            >
+                            <button onClick={handleToggleBookmark} className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2" style={{
+                                background: isBookmarked ? 'rgba(168, 85, 247, 0.2)' : 'var(--bg-surface)',
+                                color: isBookmarked ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                                border: `1px solid ${isBookmarked ? 'var(--accent-primary)' : 'var(--border-default)'}`,
+                            }}>
                                 {isBookmarked ? '❤️ Tersimpan' : '🤍 Simpan'}
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Genres */}
                 {manga.genres.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-6">
                         {manga.genres.map((genre, idx) => (
-                            <span
-                                key={idx}
-                                className="px-3 py-1 rounded-lg text-xs"
-                                style={{
-                                    background: 'var(--bg-surface)',
-                                    color: 'var(--text-secondary)',
-                                    border: '1px solid var(--border-default)',
-                                }}
-                            >
+                            <span key={idx} className="px-3 py-1 rounded-lg text-xs" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }}>
                                 {genre}
                             </span>
                         ))}
                     </div>
                 )}
 
-                {/* Description */}
-                <div
-                    className="rounded-xl p-4 mb-6"
-                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
-                >
-                    <h3 className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                        Sinopsis
-                    </h3>
-                    <p
-                        className={`text-sm leading-relaxed whitespace-pre-line ${!showFullDesc ? 'line-clamp-4' : ''}`}
-                        style={{ color: 'var(--text-secondary)' }}
-                    >
+                <div className="rounded-xl p-4 mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+                    <h3 className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Sinopsis</h3>
+                    <p className={`text-sm leading-relaxed whitespace-pre-line ${!showFullDesc ? 'line-clamp-4' : ''}`} style={{ color: 'var(--text-secondary)' }}>
                         {manga.description}
                     </p>
                     {manga.description.length > 200 && (
-                        <button
-                            onClick={() => setShowFullDesc(!showFullDesc)}
-                            className="mt-2 text-sm font-medium"
-                            style={{ color: 'var(--accent-primary)' }}
-                        >
+                        <button onClick={() => setShowFullDesc(!showFullDesc)} className="mt-2 text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>
                             {showFullDesc ? 'Sembunyikan' : 'Baca Selengkapnya'}
                         </button>
                     )}
                 </div>
 
-                {/* Chapter List */}
-                <div
-                    className="rounded-xl overflow-hidden"
-                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
-                >
-                    {/* Chapter Header */}
-                    <div
-                        className="px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-                        style={{ borderBottom: '1px solid var(--border-default)' }}
-                    >
+                <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+                    <div className="px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: '1px solid var(--border-default)' }}>
                         <h3 className="font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                             📚 Chapter ({filteredChapters.length})
                         </h3>
@@ -389,26 +298,21 @@ export default function MangaDetailPage() {
                                 />
                             </div>
 
-                            <button
-                                onClick={() => isSelectMode ? exitSelectMode() : setIsSelectMode(true)}
-                                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
-                                style={{
-                                    background: isSelectMode ? 'var(--accent-primary)' : 'var(--bg-elevated)',
-                                    color: isSelectMode ? 'white' : 'var(--text-secondary)',
-                                }}
-                            >
+                            <button onClick={() => isSelectMode ? exitSelectMode() : setIsSelectMode(true)} className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap" style={{
+                                background: isSelectMode ? 'var(--accent-primary)' : 'var(--bg-elevated)',
+                                color: isSelectMode ? 'white' : 'var(--text-secondary)',
+                            }}>
                                 {isSelectMode ? '✕ Batal' : '☑ Pilih'}
                             </button>
                         </div>
                     </div>
 
-                    {/* Chapter Items */}
                     <ScrollableContainer height="400px">
                         {filteredChapters.length > 0 ? (
                             <ChapterList
                                 chapters={filteredChapters}
                                 mangaId={manga.id}
-                                source="shinigami"
+                                source="mgkomik"
                                 readChapterIds={readChapterIds}
                                 lastReadChapterId={lastRead?.chapterId}
                                 isSelectMode={isSelectMode}
@@ -416,66 +320,27 @@ export default function MangaDetailPage() {
                                 onToggleSelection={toggleChapterSelection}
                             />
                         ) : (
-                            <div className="p-6 text-center" style={{ color: 'var(--text-muted)' }}>
-                                Belum ada chapter tersedia.
-                            </div>
+                            <div className="p-6 text-center" style={{ color: 'var(--text-muted)' }}>Belum ada chapter.</div>
                         )}
                     </ScrollableContainer>
 
-                    {/* Select Mode Actions */}
                     {isSelectMode && (
-                        <div
-                            className="px-4 py-3 flex items-center justify-between flex-wrap gap-2"
-                            style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border-default)' }}
-                        >
-                            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                                {selectedChapters.length} dipilih
-                            </span>
+                        <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2" style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border-default)' }}>
+                            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{selectedChapters.length} dipilih</span>
                             <div className="flex gap-2">
-                                <button
-                                    onClick={() =>
-                                        selectedChapters.length === manga.chapters.length
-                                            ? setSelectedChapters([])
-                                            : setSelectedChapters(manga.chapters.map(c => c.id))
-                                    }
-                                    className="px-3 py-1.5 rounded-lg text-xs"
-                                    style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
-                                >
+                                <button onClick={() => selectedChapters.length === manga.chapters.length ? setSelectedChapters([]) : setSelectedChapters(manga.chapters.map(c => c.id))} className="px-3 py-1.5 rounded-lg text-xs" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
                                     {selectedChapters.length === manga.chapters.length ? 'Batal Semua' : 'Pilih Semua'}
                                 </button>
-                                <button
-                                    onClick={handleMarkSelectedAsRead}
-                                    disabled={selectedChapters.length === 0}
-                                    className="px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
-                                    style={{ background: 'var(--accent-success)', color: 'white' }}
-                                >
-                                    ✓ Dibaca
-                                </button>
-                                <button
-                                    onClick={handleMarkSelectedAsUnread}
-                                    disabled={selectedChapters.length === 0}
-                                    className="px-3 py-1.5 rounded-lg text-xs disabled:opacity-50"
-                                    style={{ background: 'var(--accent-warning)', color: 'white' }}
-                                >
-                                    ✗ Belum Baca
-                                </button>
+                                <button onClick={handleMarkSelectedAsRead} disabled={selectedChapters.length === 0} className="px-3 py-1.5 rounded-lg text-xs disabled:opacity-50" style={{ background: 'var(--accent-success)', color: 'white' }}>✓ Dibaca</button>
+                                <button onClick={handleMarkSelectedAsUnread} disabled={selectedChapters.length === 0} className="px-3 py-1.5 rounded-lg text-xs disabled:opacity-50" style={{ background: 'var(--accent-warning)', color: 'white' }}>✗ Belum</button>
                             </div>
                         </div>
                     )}
                 </div>
             </main>
 
-            {/* Fixed FAB for Continue Reading */}
             {lastRead && (
-                <Link
-                    href={`/read/shinigami/${manga.id}/${lastRead.chapterId}`}
-                    className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 px-5 py-3 rounded-full shadow-lg transition-transform hover:scale-105 flex items-center gap-2 z-30"
-                    style={{
-                        background: 'var(--accent-primary)',
-                        color: 'white',
-                        boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)',
-                    }}
-                >
+                <Link href={`/read/mgkomik/${manga.id}/${lastRead.chapterId}`} className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 px-5 py-3 rounded-full shadow-lg hover:scale-105 flex items-center gap-2 z-30" style={{ background: 'var(--accent-primary)', color: 'white', boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)' }}>
                     ▶ Lanjut Baca
                 </Link>
             )}

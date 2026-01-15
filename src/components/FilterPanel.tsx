@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Filter, ChevronDown, X, Check } from 'lucide-react';
 
 export interface FilterOptions {
     status: string[];
@@ -81,22 +82,23 @@ export default function FilterPanel({
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-700/30 transition-colors"
             >
                 <div className="flex items-center gap-2">
-                    <span className="text-lg">🔍</span>
+                    <Filter size={18} className={activeFilterCount > 0 ? "text-purple-400" : "text-slate-400"} />
                     <span className="text-white font-medium">Filter</span>
                     {activeFilterCount > 0 && (
-                        <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
+                        <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full min-w-[20px] text-center">
                             {activeFilterCount}
                         </span>
                     )}
                 </div>
-                <span className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                    ▼
-                </span>
+                <ChevronDown
+                    size={20}
+                    className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                />
             </button>
 
             {/* Filter Content */}
             {isExpanded && (
-                <div className="p-4 border-t border-slate-700/50 space-y-4">
+                <div className="p-4 border-t border-slate-700/50 space-y-4 animate-slideDown">
                     {/* Status Filter */}
                     <div>
                         <h4 className="text-sm font-medium text-slate-300 mb-2">Status</h4>
@@ -105,15 +107,18 @@ export default function FilterPanel({
                                 <button
                                     key={option.id}
                                     onClick={() => handleStatusToggle(option.id)}
-                                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${option.id === 'all'
-                                            ? selectedStatus.length === 0
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-slate-700 text-slate-400 hover:text-white'
-                                            : selectedStatus.includes(option.id)
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-slate-700 text-slate-400 hover:text-white'
+                                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1.5 ${option.id === 'all'
+                                        ? selectedStatus.length === 0
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-slate-700 text-slate-400 hover:text-white'
+                                        : selectedStatus.includes(option.id)
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-slate-700 text-slate-400 hover:text-white'
                                         }`}
                                 >
+                                    {(option.id === 'all' && selectedStatus.length === 0) || selectedStatus.includes(option.id) ? (
+                                        <Check size={14} />
+                                    ) : null}
                                     {option.label}
                                 </button>
                             ))}
@@ -123,14 +128,14 @@ export default function FilterPanel({
                     {/* Genre Filter */}
                     <div>
                         <h4 className="text-sm font-medium text-slate-300 mb-2">Genre</h4>
-                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-2">
+                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                             {availableGenres.map((genre) => (
                                 <button
                                     key={genre}
                                     onClick={() => handleGenreToggle(genre)}
                                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${selectedGenres.includes(genre)
-                                            ? 'bg-pink-600 text-white'
-                                            : 'bg-slate-700 text-slate-400 hover:text-white'
+                                        ? 'bg-pink-600 text-white'
+                                        : 'bg-slate-700 text-slate-400 hover:text-white'
                                         }`}
                                 >
                                     {genre}
@@ -146,7 +151,7 @@ export default function FilterPanel({
                             <select
                                 value={language}
                                 onChange={(e) => handleLanguageChange(e.target.value)}
-                                className="bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm border border-slate-600 focus:outline-none focus:border-purple-500"
+                                className="bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm border border-slate-600 focus:outline-none focus:border-purple-500 w-full md:w-auto"
                             >
                                 <option value="all">Semua Bahasa</option>
                                 <option value="id">Indonesia</option>
@@ -161,9 +166,9 @@ export default function FilterPanel({
                     {activeFilterCount > 0 && (
                         <button
                             onClick={clearAllFilters}
-                            className="w-full py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="w-full py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
-                            ✕ Hapus Semua Filter
+                            <X size={16} /> Hapus Semua Filter
                         </button>
                     )}
                 </div>
