@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { addToHistory, markChapterAsRead } from '@/lib/storage';
+import { addToHistory, markChapterAsRead, getLastRead, updateHistoryPage } from '@/lib/storage';
 
 interface PageData {
     index: number;
@@ -47,6 +47,15 @@ export default function ReaderPage() {
     const overscrollTimer = useRef<NodeJS.Timeout | null>(null);
     const isNavigating = useRef(false);
 
+    // Page preloading state
+    const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
+    const [prefetchedPages, setPrefetchedPages] = useState<Set<number>>(new Set());
+
+    // Saved page position for resume reading
+    const [savedPagePosition, setSavedPagePosition] = useState<number | null>(null);
+    const hasScrolledToSavedPosition = useRef(false);
+    const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
     // Auto-hide controls after 3 seconds
     useEffect(() => {
         if (showControls) {
@@ -58,9 +67,33 @@ export default function ReaderPage() {
     // Fetch chapter data
     useEffect(() => {
         if (chapterId) {
+            // First check if there's a saved position for this chapter
+            const lastRead = getLastRead(mangaId, 'shinigami');
+            if (lastRead && lastRead.chapterId === chapterId && lastRead.lastReadPage) {
+                setSavedPagePosition(lastRead.lastReadPage);
+            } else {
+                setSavedPagePosition(null);
+            }
+            hasScrolledToSavedPosition.current = false;
             fetchChapter();
         }
-    }, [chapterId]);
+    }, [chapterId, mangaId]);
+
+    // Scroll to saved position after pages are loaded
+    useEffect(() => {
+        if (savedPagePosition !== null && pages.length > 0 && !hasScrolledToSavedPosition.current && !loading) {
+            // Wait a bit for images to render
+            const timer = setTimeout(() => {
+                const targetPage = pageRefs.current[savedPagePosition];
+                if (targetPage) {
+                    targetPage.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    hasScrolledToSavedPosition.current = true;
+                    setCurrentPage(savedPagePosition + 1);
+                }
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [savedPagePosition, pages.length, loading]);
 
     const fetchChapter = async () => {
         setLoading(true);
@@ -72,6 +105,9 @@ export default function ReaderPage() {
             if (data.success) {
                 setChapter(data.chapter);
                 setPages(data.pages);
+
+                // Initialize page refs array
+                pageRefs.current = new Array(data.pages.length).fill(null);
 
                 // AUTO-SAVE HISTORY dengan data lengkap
                 // Ini akan UPDATE history jika manga sudah ada (bukan duplikat)
@@ -97,19 +133,62 @@ export default function ReaderPage() {
         }
     };
 
-    // Track scroll position
+    // Track scroll position and save to history
+    const savePagePositionTimer = useRef<NodeJS.Timeout | null>(null);
+
     const handleScroll = useCallback(() => {
         const scrollTop = window.scrollY;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
         const scrollPercent = scrollTop / docHeight;
         const estimatedPage = Math.ceil(scrollPercent * pages.length) || 1;
-        setCurrentPage(Math.min(estimatedPage, pages.length));
-    }, [pages.length]);
+        const newPage = Math.min(estimatedPage, pages.length);
+        setCurrentPage(newPage);
+
+        // Debounced save to history (save after 1 second of no scrolling)
+        if (savePagePositionTimer.current) {
+            clearTimeout(savePagePositionTimer.current);
+        }
+        savePagePositionTimer.current = setTimeout(() => {
+            if (chapter) {
+                updateHistoryPage(chapter.mangaId || mangaId, 'shinigami', chapterId, newPage - 1);
+            }
+        }, 1000);
+    }, [pages.length, chapter, mangaId, chapterId]);
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            // Clear pending save on unmount
+            if (savePagePositionTimer.current) {
+                clearTimeout(savePagePositionTimer.current);
+            }
+        };
     }, [handleScroll]);
+
+    // Handle page loaded
+    const handlePageLoaded = useCallback((pageIndex: number) => {
+        setLoadedPages(prev => new Set([...prev, pageIndex]));
+    }, []);
+
+    // Prefetch upcoming pages
+    useEffect(() => {
+        if (pages.length === 0) return;
+
+        const prefetchAhead = 5; // Prefetch 5 pages ahead
+        const startPrefetch = currentPage;
+        const endPrefetch = Math.min(currentPage + prefetchAhead, pages.length);
+
+        for (let i = startPrefetch; i < endPrefetch; i++) {
+            if (!prefetchedPages.has(i)) {
+                const img = new Image();
+                img.src = pages[i].url;
+                img.onload = () => {
+                    setPrefetchedPages(prev => new Set([...prev, i]));
+                };
+            }
+        }
+    }, [currentPage, pages, prefetchedPages]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -137,9 +216,9 @@ export default function ReaderPage() {
             // Scrolling up at top
             if (e.deltaY < 0 && isAtTop && chapter.prevChapterId) {
                 overscrollCount.current++;
-                setOverscrollMessage(`Scroll ${3 - overscrollCount.current}x lagi untuk chapter sebelumnya`);
+                setOverscrollMessage(`Scroll ${2 - overscrollCount.current}x lagi untuk chapter sebelumnya`);
 
-                if (overscrollCount.current >= 3) {
+                if (overscrollCount.current >= 2) {
                     isNavigating.current = true;
                     setOverscrollMessage('Pindah ke chapter sebelumnya...');
                     setTimeout(() => {
@@ -157,9 +236,9 @@ export default function ReaderPage() {
             // Scrolling down at bottom
             else if (e.deltaY > 0 && isAtBottom && chapter.nextChapterId) {
                 overscrollCount.current++;
-                setOverscrollMessage(`Scroll ${3 - overscrollCount.current}x lagi untuk chapter selanjutnya`);
+                setOverscrollMessage(`Scroll ${2 - overscrollCount.current}x lagi untuk chapter selanjutnya`);
 
-                if (overscrollCount.current >= 3) {
+                if (overscrollCount.current >= 2) {
                     isNavigating.current = true;
                     setOverscrollMessage('Pindah ke chapter selanjutnya...');
                     setTimeout(() => {
@@ -221,6 +300,16 @@ export default function ReaderPage() {
                 </div>
             )}
 
+            {/* Loading Progress Bar */}
+            {pages.length > 0 && loadedPages.size < pages.length && (
+                <div className="fixed top-0 left-0 right-0 z-[60] h-1 bg-slate-800">
+                    <div
+                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                        style={{ width: `${(loadedPages.size / pages.length) * 100}%` }}
+                    />
+                </div>
+            )}
+
             {/* Top Navigation Bar */}
             <header
                 className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : '-translate-y-full'
@@ -255,17 +344,33 @@ export default function ReaderPage() {
 
             {/* Image Container */}
             <main className="flex flex-col items-center">
-                {pages.map((page) => (
-                    <img
+                {pages.map((page, index) => (
+                    <div
                         key={page.index}
-                        src={page.url}
-                        alt={`Page ${page.index}`}
-                        className="w-full max-w-4xl"
-                        loading="lazy"
-                        onError={(e) => {
-                            e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200"><rect fill="%231a1a2e" width="800" height="1200"/><text x="400" y="600" text-anchor="middle" dy=".3em" fill="%236b7280" font-size="24">Gagal memuat gambar</text></svg>';
-                        }}
-                    />
+                        className="relative w-full max-w-4xl"
+                        ref={(el) => { pageRefs.current[index] = el; }}
+                    >
+                        {/* Loading placeholder */}
+                        {!loadedPages.has(index) && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                                <div className="text-center">
+                                    <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                    <p className="text-slate-500 text-sm">Halaman {index + 1}</p>
+                                </div>
+                            </div>
+                        )}
+                        <img
+                            src={page.url}
+                            alt={`Page ${page.index}`}
+                            className={`w-full ${!loadedPages.has(index) ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+                            loading="lazy"
+                            onLoad={() => handlePageLoaded(index)}
+                            onError={(e) => {
+                                e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200"><rect fill="%231a1a2e" width="800" height="1200"/><text x="400" y="600" text-anchor="middle" dy=".3em" fill="%236b7280" font-size="24">Gagal memuat gambar</text></svg>';
+                                handlePageLoaded(index);
+                            }}
+                        />
+                    </div>
                 ))}
             </main>
 

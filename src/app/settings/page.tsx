@@ -95,6 +95,7 @@ function mapFavouriteToBookmark(fav: KotatsuFavourite): MangaBookmark {
         cover: manga.cover_url || '',
         source: mapSourceName(manga.source),
         addedAt: fav.created_at,
+        categoryId: fav.category_id > 0 ? `kotatsu_${fav.category_id}` : undefined,
     };
 }
 
@@ -114,11 +115,24 @@ function mapHistoryToReadingHistory(hist: KotatsuHistory): ReadingHistory {
     };
 }
 
+// Kotatsu category interface
+interface KotatsuCategory {
+    category_id: number;
+    created_at: number;
+    sort_key: number;
+    title: string;
+    order?: string | null;
+    track: boolean;
+    show_in_lib: boolean;
+    deleted_at: number;
+}
+
 // ============== STORAGE KEYS (duplicated from storage.ts for direct access) ==============
 
 const STORAGE_KEYS = {
     LIBRARY: 'kotatsu_library',
     HISTORY: 'kotatsu_history',
+    CATEGORIES: 'kotatsu_categories',
 } as const;
 
 export default function SettingsPage() {
@@ -130,12 +144,14 @@ export default function SettingsPage() {
     const [selectedFiles, setSelectedFiles] = useState<{
         favourites: File | null;
         history: File | null;
-    }>({ favourites: null, history: null });
+        categories: File | null;
+    }>({ favourites: null, history: null, categories: null });
 
     const favouritesInputRef = useRef<HTMLInputElement>(null);
     const historyInputRef = useRef<HTMLInputElement>(null);
+    const categoriesInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileSelect = (type: 'favourites' | 'history', file: File | null) => {
+    const handleFileSelect = (type: 'favourites' | 'history' | 'categories', file: File | null) => {
         setSelectedFiles(prev => ({ ...prev, [type]: file }));
         setImportStatus({ type: 'idle', message: '' });
     };
@@ -158,7 +174,7 @@ export default function SettingsPage() {
     };
 
     const handleImport = async () => {
-        if (!selectedFiles.favourites && !selectedFiles.history) {
+        if (!selectedFiles.favourites && !selectedFiles.history && !selectedFiles.categories) {
             setImportStatus({
                 type: 'error',
                 message: 'Pilih minimal satu file untuk diimport!',
@@ -174,6 +190,38 @@ export default function SettingsPage() {
             let libraryDuplicates = 0;
             let historyImported = 0;
             let historyDuplicates = 0;
+            let categoriesImported = 0;
+
+            // ============== IMPORT CATEGORIES FIRST ==============
+            if (selectedFiles.categories) {
+                const kotatsuCategories = await readFileAsJSON(selectedFiles.categories) as KotatsuCategory[];
+
+                // Get existing categories
+                const existingCategoriesRaw = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+                const existingCategories: Array<{ id: string; name: string; order: number }> =
+                    existingCategoriesRaw ? JSON.parse(existingCategoriesRaw) : [];
+                const existingIds = new Set(existingCategories.map(c => c.id));
+
+                // Map and add new categories
+                for (const kcat of kotatsuCategories) {
+                    if (kcat.deleted_at === 0) { // Only import non-deleted categories
+                        const catId = `kotatsu_${kcat.category_id}`;
+                        if (!existingIds.has(catId)) {
+                            existingCategories.push({
+                                id: catId,
+                                name: kcat.title,
+                                order: kcat.sort_key,
+                            });
+                            existingIds.add(catId);
+                            categoriesImported++;
+                        }
+                    }
+                }
+
+                // Sort by order and save
+                existingCategories.sort((a, b) => a.order - b.order);
+                localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(existingCategories));
+            }
 
             // ============== IMPORT LIBRARY (FAVOURITES) ==============
             if (selectedFiles.favourites) {
@@ -238,15 +286,18 @@ export default function SettingsPage() {
                     }
                 }
 
-                // Merge and save (limit to 100)
+                // Merge and save (limit to 500)
                 const mergedHistory = [...newHistory, ...existingHistory].slice(0, 500);
                 localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(mergedHistory));
             }
 
             // Update status
+            const successMsg = categoriesImported > 0
+                ? `Import berhasil! ${categoriesImported} kategori diimport.`
+                : 'Import berhasil!';
             setImportStatus({
                 type: 'success',
-                message: 'Import berhasil!',
+                message: successMsg,
                 details: {
                     libraryImported,
                     libraryDuplicates,
@@ -256,9 +307,10 @@ export default function SettingsPage() {
             });
 
             // Reset file inputs
-            setSelectedFiles({ favourites: null, history: null });
+            setSelectedFiles({ favourites: null, history: null, categories: null });
             if (favouritesInputRef.current) favouritesInputRef.current.value = '';
             if (historyInputRef.current) historyInputRef.current.value = '';
+            if (categoriesInputRef.current) categoriesInputRef.current.value = '';
 
         } catch (error) {
             setImportStatus({
@@ -321,7 +373,7 @@ export default function SettingsPage() {
                     </div>
 
                     {/* History File Input */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
                             📖 File History
                         </label>
@@ -339,10 +391,32 @@ export default function SettingsPage() {
                         )}
                     </div>
 
+                    {/* Categories File Input */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            📂 File Categories (Opsional)
+                        </label>
+                        <input
+                            ref={categoriesInputRef}
+                            type="file"
+                            accept=".json,application/json"
+                            onChange={(e) => handleFileSelect('categories', e.target.files?.[0] || null)}
+                            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:font-medium file:cursor-pointer hover:file:bg-purple-500 transition-colors"
+                        />
+                        {selectedFiles.categories && (
+                            <p className="text-sm text-green-400 mt-1">
+                                ✅ {selectedFiles.categories.name}
+                            </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                            Untuk menjaga kategori favorit tetap terpisah sesuai aslinya
+                        </p>
+                    </div>
+
                     {/* Import Button */}
                     <button
                         onClick={handleImport}
-                        disabled={isProcessing || (!selectedFiles.favourites && !selectedFiles.history)}
+                        disabled={isProcessing || (!selectedFiles.favourites && !selectedFiles.history && !selectedFiles.categories)}
                         className="w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl font-semibold text-white hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {isProcessing ? (
@@ -360,13 +434,13 @@ export default function SettingsPage() {
                     {/* Status Display */}
                     {importStatus.type !== 'idle' && (
                         <div className={`mt-4 p-4 rounded-lg ${importStatus.type === 'success'
-                                ? 'bg-green-900/50 border border-green-700'
-                                : importStatus.type === 'error'
-                                    ? 'bg-red-900/50 border border-red-700'
-                                    : 'bg-gray-700/50 border border-gray-600'
+                            ? 'bg-green-900/50 border border-green-700'
+                            : importStatus.type === 'error'
+                                ? 'bg-red-900/50 border border-red-700'
+                                : 'bg-gray-700/50 border border-gray-600'
                             }`}>
                             <p className={`font-medium ${importStatus.type === 'success' ? 'text-green-400' :
-                                    importStatus.type === 'error' ? 'text-red-400' : 'text-gray-300'
+                                importStatus.type === 'error' ? 'text-red-400' : 'text-gray-300'
                                 }`}>
                                 {importStatus.type === 'success' ? '✅' : importStatus.type === 'error' ? '❌' : '⏳'}{' '}
                                 {importStatus.message}
@@ -391,11 +465,12 @@ export default function SettingsPage() {
                         <li>Extract file backup Kotatsu (.bk.zip)</li>
                         <li>Cari file <code className="bg-gray-700 px-1 rounded text-gray-300">favourites</code> untuk library</li>
                         <li>Cari file <code className="bg-gray-700 px-1 rounded text-gray-300">history</code> untuk history baca</li>
+                        <li>Cari file <code className="bg-gray-700 px-1 rounded text-gray-300">categories</code> untuk kategori favorit</li>
                         <li>Upload file-file tersebut di atas</li>
                         <li>Klik "Mulai Import"</li>
                     </ol>
                     <p className="text-xs text-gray-600 mt-4">
-                        ⚠️ Data yang sudah ada tidak akan ditimpa. Hanya data baru yang akan ditambahkan.
+                        ⚠️ Data yang sudah ada tidak akan ditimpa. Kategori dari Kotatsu akan dijaga terpisah sesuai file aslinya.
                     </p>
                 </section>
             </div>

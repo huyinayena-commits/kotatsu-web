@@ -14,10 +14,27 @@ import {
     reorderCategories,
     setMangaCategory,
     getLibraryByCategory,
+    getDisplaySettings,
+    setDisplaySettings,
+    getSortSettings,
+    setSortSettings,
+    sortHistory,
+    sortLibrary,
     type MangaBookmark,
     type ReadingHistory,
-    type Category
+    type Category,
+    type ViewMode,
+    type HistorySortOption,
+    type LibrarySortOption
 } from '@/lib/storage';
+
+// Helper to proxy external images to bypass CORS
+const getProxiedImageUrl = (url: string | undefined): string | undefined => {
+    if (!url) return undefined;
+    // Only proxy external URLs (not already proxied or local)
+    if (url.startsWith('/api/') || url.startsWith('data:')) return url;
+    return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+};
 
 type TabType = 'history' | 'library';
 
@@ -34,10 +51,27 @@ export default function LibraryPage() {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [categoryMenuOpen, setCategoryMenuOpen] = useState<string | null>(null); // mangaId-source
 
+    // Display and Sort settings state
+    const [historyViewMode, setHistoryViewMode] = useState<ViewMode>('list');
+    const [libraryViewMode, setLibraryViewMode] = useState<ViewMode>('grid');
+    const [historySort, setHistorySort] = useState<HistorySortOption>('lastRead');
+    const [librarySort, setLibrarySort] = useState<LibrarySortOption>('lastAdded');
+
+    // Source filter state for library
+    const [selectedSource, setSelectedSource] = useState<string>('all');
+
     // Load data from LocalStorage on mount
     useEffect(() => {
         setMounted(true);
         refreshData();
+        // Load display settings
+        const displaySettings = getDisplaySettings();
+        setHistoryViewMode(displaySettings.historyMode);
+        setLibraryViewMode(displaySettings.libraryMode);
+        // Load sort settings
+        const sortSettings = getSortSettings();
+        setHistorySort(sortSettings.historySort);
+        setLibrarySort(sortSettings.librarySort);
     }, []);
 
     const refreshData = () => {
@@ -46,6 +80,40 @@ export default function LibraryPage() {
         setCategories(getCategories());
         setLibraryByCategory(getLibraryByCategory());
     };
+
+    // Toggle view mode handlers
+    const handleHistoryViewModeChange = (mode: ViewMode) => {
+        setHistoryViewMode(mode);
+        setDisplaySettings({ historyMode: mode });
+    };
+
+    const handleLibraryViewModeChange = (mode: ViewMode) => {
+        setLibraryViewMode(mode);
+        setDisplaySettings({ libraryMode: mode });
+    };
+
+    // Sort handlers
+    const handleHistorySortChange = (sort: HistorySortOption) => {
+        setHistorySort(sort);
+        setSortSettings({ historySort: sort });
+    };
+
+    const handleLibrarySortChange = (sort: LibrarySortOption) => {
+        setLibrarySort(sort);
+        setSortSettings({ librarySort: sort });
+    };
+
+    // Get sorted data
+    const sortedHistory = sortHistory(history, historySort);
+    const sortedLibrary = sortLibrary(library, librarySort);
+
+    // Get unique sources from library for source tabs (normalize to lowercase)
+    const uniqueSources = Array.from(new Set(library.map(m => m.source.toLowerCase()))).sort();
+
+    // Filter library by selected source (case-insensitive)
+    const filteredLibrary = selectedSource === 'all'
+        ? sortedLibrary
+        : sortedLibrary.filter(m => m.source.toLowerCase() === selectedSource.toLowerCase());
 
     const handleRemoveFromLibrary = (mangaId: string, source: string) => {
         removeFromLibrary(mangaId, source);
@@ -171,82 +239,158 @@ export default function LibraryPage() {
                 {/* History Tab */}
                 {activeTab === 'history' && (
                     <div>
-                        {history.length > 0 && (
-                            <div className="flex justify-end mb-4">
+                        {/* Toolbar */}
+                        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                            <div className="flex items-center gap-2">
+                                {/* View Mode Toggle */}
+                                <div className="flex bg-slate-800 rounded-lg p-1">
+                                    <button
+                                        onClick={() => handleHistoryViewModeChange('list')}
+                                        className={`px-3 py-1.5 text-sm rounded-md transition-colors ${historyViewMode === 'list' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        ☰ List
+                                    </button>
+                                    <button
+                                        onClick={() => handleHistoryViewModeChange('grid')}
+                                        className={`px-3 py-1.5 text-sm rounded-md transition-colors ${historyViewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        ⊞ Grid
+                                    </button>
+                                </div>
+
+                                {/* Sort Dropdown */}
+                                <select
+                                    value={historySort}
+                                    onChange={(e) => handleHistorySortChange(e.target.value as HistorySortOption)}
+                                    className="bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-sm border border-slate-700 focus:outline-none focus:border-purple-500"
+                                >
+                                    <option value="lastRead">Terakhir Dibaca</option>
+                                    <option value="nameAZ">Nama A-Z</option>
+                                    <option value="nameZA">Nama Z-A</option>
+                                </select>
+                            </div>
+
+                            {history.length > 0 && (
                                 <button
                                     onClick={handleClearHistory}
                                     className="px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
                                 >
                                     🗑️ Hapus Semua
                                 </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
                         {history.length > 0 ? (
-                            <div className="space-y-3">
-                                {history.map((item) => (
-                                    <div
-                                        key={`${item.mangaId}-${item.source}`}
-                                        className="bg-slate-800/30 rounded-2xl border border-slate-700/50 overflow-hidden hover:border-purple-500/30 transition-colors"
-                                    >
-                                        <div className="flex gap-4 p-4">
-                                            {/* Cover */}
-                                            <Link
-                                                href={`/manga/${item.source}/${item.mangaId}`}
-                                                className="flex-shrink-0"
-                                            >
-                                                <div className="w-20 h-28 rounded-lg overflow-hidden bg-slate-700">
+                            historyViewMode === 'list' ? (
+                                // List View
+                                <div className="space-y-3">
+                                    {sortedHistory.map((item) => (
+                                        <div
+                                            key={`${item.mangaId}-${item.source}`}
+                                            className="bg-slate-800/30 rounded-2xl border border-slate-700/50 overflow-hidden hover:border-purple-500/30 transition-colors"
+                                        >
+                                            <div className="flex gap-4 p-4">
+                                                {/* Cover */}
+                                                <Link
+                                                    href={`/manga/${item.source}/${item.mangaId}`}
+                                                    className="flex-shrink-0"
+                                                >
+                                                    <div className="w-20 h-28 rounded-lg overflow-hidden bg-slate-700">
+                                                        {item.mangaCover ? (
+                                                            <img
+                                                                src={item.mangaCover}
+                                                                alt={item.mangaTitle}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.style.display = 'none';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-2xl">
+                                                                📖
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </Link>
+
+                                                {/* Info */}
+                                                <div className="flex-grow min-w-0">
+                                                    <Link href={`/manga/${item.source}/${item.mangaId}`}>
+                                                        <h3 className="text-white font-medium text-lg truncate hover:text-purple-300 transition-colors">
+                                                            {item.mangaTitle}
+                                                        </h3>
+                                                    </Link>
+                                                    <p className="text-slate-400 text-sm mt-1">
+                                                        Terakhir: Chapter {item.chapterNumber}
+                                                    </p>
+                                                    <p className="text-slate-500 text-xs mt-1">
+                                                        {formatTimeAgo(item.lastReadAt)} • {item.source}
+                                                    </p>
+
+                                                    {/* Actions */}
+                                                    <div className="flex gap-2 mt-3">
+                                                        <Link
+                                                            href={`/read/${item.source}/${item.mangaId}/${item.chapterId}`}
+                                                            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm rounded-lg transition-colors"
+                                                        >
+                                                            ▶️ Lanjut Baca
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleRemoveFromHistory(item.mangaId, item.source)}
+                                                            className="px-3 py-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 text-sm rounded-lg transition-colors"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                // Grid View
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                    {sortedHistory.map((item) => (
+                                        <div
+                                            key={`${item.mangaId}-${item.source}`}
+                                            className="group relative rounded-xl overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-purple-500/50 transition-all"
+                                        >
+                                            <Link href={`/read/${item.source}/${item.mangaId}/${item.chapterId}`}>
+                                                <div className="aspect-[3/4] bg-slate-700 overflow-hidden">
                                                     {item.mangaCover ? (
                                                         <img
                                                             src={item.mangaCover}
                                                             alt={item.mangaTitle}
-                                                            className="w-full h-full object-cover"
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                             onError={(e) => {
                                                                 e.currentTarget.style.display = 'none';
                                                             }}
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-2xl">
-                                                            📖
-                                                        </div>
+                                                        <div className="w-full h-full flex items-center justify-center text-4xl">📖</div>
                                                     )}
                                                 </div>
-                                            </Link>
-
-                                            {/* Info */}
-                                            <div className="flex-grow min-w-0">
-                                                <Link href={`/manga/${item.source}/${item.mangaId}`}>
-                                                    <h3 className="text-white font-medium text-lg truncate hover:text-purple-300 transition-colors">
-                                                        {item.mangaTitle}
-                                                    </h3>
-                                                </Link>
-                                                <p className="text-slate-400 text-sm mt-1">
-                                                    Terakhir: Chapter {item.chapterNumber}
-                                                </p>
-                                                <p className="text-slate-500 text-xs mt-1">
-                                                    {formatTimeAgo(item.lastReadAt)}
-                                                </p>
-
-                                                {/* Actions */}
-                                                <div className="flex gap-2 mt-3">
-                                                    <Link
-                                                        href={`/read/${item.source}/${item.mangaId}/${item.chapterId}`}
-                                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm rounded-lg transition-colors"
-                                                    >
-                                                        ▶️ Lanjut Baca
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => handleRemoveFromHistory(item.mangaId, item.source)}
-                                                        className="px-3 py-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 text-sm rounded-lg transition-colors"
-                                                    >
-                                                        ✕
-                                                    </button>
+                                                {/* Source Badge */}
+                                                <span className="absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-medium rounded text-white bg-purple-500/80">
+                                                    {item.source}
+                                                </span>
+                                                {/* Progress Overlay */}
+                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
+                                                    <p className="text-white text-sm font-medium line-clamp-2">{item.mangaTitle}</p>
+                                                    <p className="text-purple-300 text-xs mt-1">Ch. {item.chapterNumber}</p>
                                                 </div>
-                                            </div>
+                                            </Link>
+                                            {/* Remove Button */}
+                                            <button
+                                                onClick={() => handleRemoveFromHistory(item.mangaId, item.source)}
+                                                className="absolute top-2 left-2 p-2 bg-black/50 hover:bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                                            >
+                                                ✕
+                                            </button>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )
                         ) : (
                             <div className="text-center py-20">
                                 <p className="text-6xl mb-4">📭</p>
@@ -262,8 +406,38 @@ export default function LibraryPage() {
                 {/* Library Tab */}
                 {activeTab === 'library' && (
                     <div>
-                        {/* Category Management Button */}
-                        <div className="flex justify-end mb-4">
+                        {/* Toolbar */}
+                        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                            <div className="flex items-center gap-2">
+                                {/* View Mode Toggle */}
+                                <div className="flex bg-slate-800 rounded-lg p-1">
+                                    <button
+                                        onClick={() => handleLibraryViewModeChange('grid')}
+                                        className={`px-3 py-1.5 text-sm rounded-md transition-colors ${libraryViewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        ⊞ Grid
+                                    </button>
+                                    <button
+                                        onClick={() => handleLibraryViewModeChange('list')}
+                                        className={`px-3 py-1.5 text-sm rounded-md transition-colors ${libraryViewMode === 'list' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        ☰ List
+                                    </button>
+                                </div>
+
+                                {/* Sort Dropdown */}
+                                <select
+                                    value={librarySort}
+                                    onChange={(e) => handleLibrarySortChange(e.target.value as LibrarySortOption)}
+                                    className="bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-sm border border-slate-700 focus:outline-none focus:border-purple-500"
+                                >
+                                    <option value="lastAdded">Terakhir Ditambah</option>
+                                    <option value="nameAZ">Nama A-Z</option>
+                                    <option value="nameZA">Nama Z-A</option>
+                                    <option value="category">Kategori</option>
+                                </select>
+                            </div>
+
                             <button
                                 onClick={() => setShowCategoryModal(true)}
                                 className="px-4 py-2 text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-colors"
@@ -272,126 +446,182 @@ export default function LibraryPage() {
                             </button>
                         </div>
 
-                        {library.length > 0 ? (
+                        {/* Source Tabs */}
+                        {uniqueSources.length > 1 && (
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                <button
+                                    onClick={() => setSelectedSource('all')}
+                                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedSource === 'all'
+                                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                                        : 'bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700'
+                                        }`}
+                                >
+                                    🌐 Semua ({library.length})
+                                </button>
+                                {uniqueSources.map((source) => {
+                                    const count = library.filter(m => m.source.toLowerCase() === source.toLowerCase()).length;
+                                    const sourceIcon = source === 'shinigami' ? '💀' :
+                                        source === 'komikcast' ? '📺' :
+                                            source === 'komiku' ? '📚' : '🌐';
+                                    return (
+                                        <button
+                                            key={source}
+                                            onClick={() => setSelectedSource(source)}
+                                            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedSource === source
+                                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                                                : 'bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700'
+                                                }`}
+                                        >
+                                            {sourceIcon} {source} ({count})
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {filteredLibrary.length > 0 ? (
                             <div className="space-y-8">
-                                {libraryByCategory.map((group) => (
-                                    <div key={group.category?.id || 'uncategorized'}>
-                                        {/* Category Header */}
-                                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                            {group.category ? (
-                                                <>📁 {group.category.name}</>
-                                            ) : (
-                                                <>📋 Tanpa Kategori</>
-                                            )}
-                                            <span className="text-slate-500 text-sm font-normal">
-                                                ({group.mangas.length})
-                                            </span>
-                                        </h3>
+                                {libraryByCategory
+                                    .map((group) => {
+                                        // Filter mangas by selected source (case-insensitive)
+                                        const filteredMangas = selectedSource === 'all'
+                                            ? group.mangas
+                                            : group.mangas.filter(m => m.source.toLowerCase() === selectedSource.toLowerCase());
 
-                                        {/* Manga Grid */}
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                                            {group.mangas.map((item) => (
-                                                <div
-                                                    key={`${item.id}-${item.source}`}
-                                                    className="group relative rounded-xl overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10"
-                                                >
-                                                    <Link href={`/manga/${item.source}/${item.id}`}>
-                                                        {/* Cover */}
-                                                        <div className="aspect-[3/4] bg-slate-700 overflow-hidden">
-                                                            {item.cover ? (
-                                                                <img
-                                                                    src={item.cover}
-                                                                    alt={item.title}
-                                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                                    onError={(e) => {
-                                                                        e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23374151" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="14">📖</text></svg>';
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center text-4xl">
-                                                                    📖
+                                        if (filteredMangas.length === 0) return null;
+
+                                        return (
+                                            <div key={group.category?.id || 'uncategorized'}>
+                                                {/* Category Header */}
+                                                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                                    {group.category ? (
+                                                        <>📁 {group.category.name}</>
+                                                    ) : (
+                                                        <>📋 Tanpa Kategori</>
+                                                    )}
+                                                    <span className="text-slate-500 text-sm font-normal">
+                                                        ({filteredMangas.length})
+                                                    </span>
+                                                </h3>
+
+                                                {/* Manga Grid */}
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                                    {filteredMangas.map((item) => (
+                                                        <div
+                                                            key={`${item.id}-${item.source}`}
+                                                            className="group relative rounded-xl overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10"
+                                                        >
+                                                            <Link href={`/manga/${item.source}/${item.id}`}>
+                                                                {/* Cover */}
+                                                                <div className="aspect-[3/4] bg-slate-700 overflow-hidden relative">
+                                                                    {item.cover ? (
+                                                                        <img
+                                                                            src={getProxiedImageUrl(item.cover)}
+                                                                            alt={item.title}
+                                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                                            referrerPolicy="no-referrer"
+                                                                            loading="lazy"
+                                                                            onError={(e) => {
+                                                                                // Try with proxy first, then fallback to placeholder
+                                                                                const img = e.currentTarget;
+                                                                                if (!img.dataset.tried) {
+                                                                                    img.dataset.tried = 'true';
+                                                                                    // Hide the broken image and show fallback
+                                                                                    img.style.display = 'none';
+                                                                                    const fallback = img.nextElementSibling as HTMLElement;
+                                                                                    if (fallback) fallback.style.display = 'flex';
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                    ) : null}
+                                                                    {/* Fallback placeholder */}
+                                                                    <div 
+                                                                        className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800"
+                                                                        style={{ display: item.cover ? 'none' : 'flex' }}
+                                                                    >
+                                                                        <span className="text-4xl">{item.title.charAt(0).toUpperCase() || '📖'}</span>
+                                                                    </div>
                                                                 </div>
-                                                            )}
-                                                        </div>
 
-                                                        {/* Title */}
-                                                        <div className="p-3">
-                                                            <h3 className="text-sm font-medium text-slate-200 line-clamp-2 group-hover:text-purple-300 transition-colors">
-                                                                {item.title}
-                                                            </h3>
-                                                            <p className="text-xs text-slate-500 mt-1 capitalize">
-                                                                {item.source}
-                                                            </p>
-                                                        </div>
-                                                    </Link>
+                                                                {/* Title */}
+                                                                <div className="p-3">
+                                                                    <h3 className="text-sm font-medium text-slate-200 line-clamp-2 group-hover:text-purple-300 transition-colors">
+                                                                        {item.title}
+                                                                    </h3>
+                                                                    <p className="text-xs text-slate-500 mt-1 capitalize">
+                                                                        {item.source}
+                                                                    </p>
+                                                                </div>
+                                                            </Link>
 
-                                                    {/* Action Buttons */}
-                                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                        {/* Category Dropdown */}
-                                                        <div className="relative">
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    setCategoryMenuOpen(
-                                                                        categoryMenuOpen === `${item.id}-${item.source}`
-                                                                            ? null
-                                                                            : `${item.id}-${item.source}`
-                                                                    );
-                                                                }}
-                                                                className="p-2 bg-black/50 hover:bg-purple-500/80 text-white rounded-full"
-                                                            >
-                                                                📁
-                                                            </button>
-
-                                                            {/* Dropdown Menu */}
-                                                            {categoryMenuOpen === `${item.id}-${item.source}` && (
-                                                                <div className="absolute right-0 top-full mt-1 w-40 bg-slate-800 rounded-lg shadow-xl border border-slate-700 z-50 overflow-hidden">
+                                                            {/* Action Buttons */}
+                                                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                                {/* Category Dropdown */}
+                                                                <div className="relative">
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.preventDefault();
-                                                                            handleSetMangaCategory(item.id, item.source, undefined);
+                                                                            setCategoryMenuOpen(
+                                                                                categoryMenuOpen === `${item.id}-${item.source}`
+                                                                                    ? null
+                                                                                    : `${item.id}-${item.source}`
+                                                                            );
                                                                         }}
-                                                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-700 ${!item.categoryId ? 'text-purple-400' : 'text-slate-300'}`}
+                                                                        className="p-2 bg-black/50 hover:bg-purple-500/80 text-white rounded-full"
                                                                     >
-                                                                        📋 Tanpa Kategori
+                                                                        📁
                                                                     </button>
-                                                                    {categories.map(cat => (
-                                                                        <button
-                                                                            key={cat.id}
-                                                                            onClick={(e) => {
-                                                                                e.preventDefault();
-                                                                                handleSetMangaCategory(item.id, item.source, cat.id);
-                                                                            }}
-                                                                            className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-700 ${item.categoryId === cat.id ? 'text-purple-400' : 'text-slate-300'}`}
-                                                                        >
-                                                                            📁 {cat.name}
-                                                                        </button>
-                                                                    ))}
+
+                                                                    {/* Dropdown Menu */}
+                                                                    {categoryMenuOpen === `${item.id}-${item.source}` && (
+                                                                        <div className="absolute right-0 top-full mt-1 w-40 bg-slate-800 rounded-lg shadow-xl border border-slate-700 z-50 overflow-hidden">
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    handleSetMangaCategory(item.id, item.source, undefined);
+                                                                                }}
+                                                                                className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-700 ${!item.categoryId ? 'text-purple-400' : 'text-slate-300'}`}
+                                                                            >
+                                                                                📋 Tanpa Kategori
+                                                                            </button>
+                                                                            {categories.map(cat => (
+                                                                                <button
+                                                                                    key={cat.id}
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault();
+                                                                                        handleSetMangaCategory(item.id, item.source, cat.id);
+                                                                                    }}
+                                                                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-700 ${item.categoryId === cat.id ? 'text-purple-400' : 'text-slate-300'}`}
+                                                                                >
+                                                                                    📁 {cat.name}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                            )}
+
+                                                                {/* Remove Button */}
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        handleRemoveFromLibrary(item.id, item.source);
+                                                                    }}
+                                                                    className="p-2 bg-black/50 hover:bg-red-500/80 text-white rounded-full"
+                                                                >
+                                                                    ✕
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Bookmarked Badge */}
+                                                            <div className="absolute top-2 left-2">
+                                                                <span className="text-2xl">❤️</span>
+                                                            </div>
                                                         </div>
-
-                                                        {/* Remove Button */}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                handleRemoveFromLibrary(item.id, item.source);
-                                                            }}
-                                                            className="p-2 bg-black/50 hover:bg-red-500/80 text-white rounded-full"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Bookmarked Badge */}
-                                                    <div className="absolute top-2 left-2">
-                                                        <span className="text-2xl">❤️</span>
-                                                    </div>
+                                                    ))}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
+                                            </div>
+                                        );
+                                    }).filter(Boolean)}
                             </div>
                         ) : (
                             <div className="text-center py-20">

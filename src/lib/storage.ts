@@ -27,6 +27,23 @@ export interface ReadingHistory {
     chapterNumber: number;
     chapterTitle: string;
     lastReadAt: number; // timestamp
+    lastReadPage?: number; // 0-indexed page number
+}
+
+// Display and Sort Settings
+export type ViewMode = 'grid' | 'list';
+export type HistorySortOption = 'lastRead' | 'nameAZ' | 'nameZA';
+export type LibrarySortOption = 'lastAdded' | 'nameAZ' | 'nameZA' | 'category';
+
+export interface DisplaySettings {
+    historyMode: ViewMode;
+    libraryMode: ViewMode;
+    exploreMode: ViewMode;
+}
+
+export interface SortSettings {
+    historySort: HistorySortOption;
+    librarySort: LibrarySortOption;
 }
 
 // ============== STORAGE KEYS ==============
@@ -35,6 +52,8 @@ const STORAGE_KEYS = {
     LIBRARY: 'kotatsu_library',
     HISTORY: 'kotatsu_history',
     CATEGORIES: 'kotatsu_categories',
+    DISPLAY_SETTINGS: 'kotatsu_display_settings',
+    SORT_SETTINGS: 'kotatsu_sort_settings',
 } as const;
 
 // ============== HELPER FUNCTIONS ==============
@@ -153,6 +172,20 @@ export function clearHistory(): void {
 
 export function clearLibrary(): void {
     saveToStorage(STORAGE_KEYS.LIBRARY, []);
+}
+
+// Update page position in history (for resume reading)
+export function updateHistoryPage(mangaId: string, source: string, chapterId: string, pageNumber: number): void {
+    const history = getHistory();
+    const index = history.findIndex(
+        item => item.mangaId === mangaId && item.source === source
+    );
+
+    if (index !== -1 && history[index].chapterId === chapterId) {
+        history[index].lastReadPage = pageNumber;
+        history[index].lastReadAt = Date.now();
+        saveToStorage(STORAGE_KEYS.HISTORY, history);
+    }
 }
 
 // ============== READ CHAPTERS TRACKING ==============
@@ -308,4 +341,69 @@ export function getLibraryByCategory(): { category: Category | null; mangas: Man
     }
 
     return result;
+}
+
+// ============== DISPLAY SETTINGS FUNCTIONS ==============
+
+const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
+    historyMode: 'list',
+    libraryMode: 'grid',
+    exploreMode: 'grid',
+};
+
+const DEFAULT_SORT_SETTINGS: SortSettings = {
+    historySort: 'lastRead',
+    librarySort: 'lastAdded',
+};
+
+export function getDisplaySettings(): DisplaySettings {
+    return getFromStorage<DisplaySettings>(STORAGE_KEYS.DISPLAY_SETTINGS, DEFAULT_DISPLAY_SETTINGS);
+}
+
+export function setDisplaySettings(settings: Partial<DisplaySettings>): void {
+    const current = getDisplaySettings();
+    saveToStorage(STORAGE_KEYS.DISPLAY_SETTINGS, { ...current, ...settings });
+}
+
+export function getSortSettings(): SortSettings {
+    return getFromStorage<SortSettings>(STORAGE_KEYS.SORT_SETTINGS, DEFAULT_SORT_SETTINGS);
+}
+
+export function setSortSettings(settings: Partial<SortSettings>): void {
+    const current = getSortSettings();
+    saveToStorage(STORAGE_KEYS.SORT_SETTINGS, { ...current, ...settings });
+}
+
+// Sort helper functions
+export function sortHistory(history: ReadingHistory[], sortBy: HistorySortOption): ReadingHistory[] {
+    switch (sortBy) {
+        case 'lastRead':
+            return [...history].sort((a, b) => b.lastReadAt - a.lastReadAt);
+        case 'nameAZ':
+            return [...history].sort((a, b) => a.mangaTitle.localeCompare(b.mangaTitle));
+        case 'nameZA':
+            return [...history].sort((a, b) => b.mangaTitle.localeCompare(a.mangaTitle));
+        default:
+            return history;
+    }
+}
+
+export function sortLibrary(library: MangaBookmark[], sortBy: LibrarySortOption): MangaBookmark[] {
+    switch (sortBy) {
+        case 'lastAdded':
+            return [...library].sort((a, b) => b.addedAt - a.addedAt);
+        case 'nameAZ':
+            return [...library].sort((a, b) => a.title.localeCompare(b.title));
+        case 'nameZA':
+            return [...library].sort((a, b) => b.title.localeCompare(a.title));
+        case 'category':
+            return [...library].sort((a, b) => {
+                if (!a.categoryId && !b.categoryId) return 0;
+                if (!a.categoryId) return 1;
+                if (!b.categoryId) return -1;
+                return a.categoryId.localeCompare(b.categoryId);
+            });
+        default:
+            return library;
+    }
 }
