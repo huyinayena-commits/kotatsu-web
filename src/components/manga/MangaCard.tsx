@@ -41,17 +41,17 @@ const MangaCard = memo(function MangaCard({
         return (
             <Link
                 href={linkHref}
-                className="group relative block rounded-xl overflow-hidden transition-all hover:scale-[1.02] hover:shadow-lg"
+                className="group relative flex flex-col h-full rounded-2xl overflow-hidden transition-all hover:scale-[1.02] hover:shadow-lg"
                 style={{
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border-default)',
-                    contentVisibility: 'auto', // Optimization: skip rendering off-screen
-                    containIntrinsicSize: '200px 300px' // Placeholder size
+                    contentVisibility: 'auto',
+                    containIntrinsicSize: '200px 300px'
                 }}
             >
                 {/* Cover Image */}
                 <div
-                    className="relative w-full overflow-hidden"
+                    className="relative w-full overflow-hidden flex-shrink-0"
                     style={{ aspectRatio: '2/3' }}
                 >
                     {imageLoading && (
@@ -74,7 +74,7 @@ const MangaCard = memo(function MangaCard({
                         <img
                             src={`/api/proxy-image?url=${encodeURIComponent(cover)}`}
                             alt={title}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             onLoad={() => setImageLoading(false)}
                             onError={() => {
                                 setImageError(true);
@@ -103,40 +103,44 @@ const MangaCard = memo(function MangaCard({
 
                     {/* Source badge */}
                     <div
-                        className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-medium"
+                        className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase shadow-sm"
                         style={{
-                            background: 'var(--bg-overlay)',
+                            background: 'rgba(0,0,0,0.6)',
                             color: 'white',
                             backdropFilter: 'blur(4px)',
+                            border: '1px solid rgba(255,255,255,0.1)'
                         }}
                     >
                         {source}
                     </div>
                 </div>
 
-                {/* Info */}
-                <div className="p-3">
+                {/* Info Container - Flex Grow to push content properly */}
+                <div className="p-3 flex flex-col flex-grow">
                     <h3
-                        className="font-medium text-sm line-clamp-2 leading-tight mb-1 group-hover:text-[var(--accent-primary)] transition-colors"
+                        className="font-medium text-sm line-clamp-2 leading-snug mb-2 group-hover:text-[var(--accent-primary)] transition-colors min-h-[2.5em]"
                         style={{ color: 'var(--text-primary)' }}
                     >
                         {title}
                     </h3>
 
-                    {chapter && (
-                        <p
-                            className="text-xs mb-0.5 font-medium"
-                            style={{ color: 'var(--accent-primary)' }}
-                        >
-                            Ch. {chapterNumber || chapter}
-                        </p>
-                    )}
+                    <div className="mt-auto space-y-1">
+                        {chapter && (
+                            <p
+                                className="text-xs font-semibold flex items-center gap-1"
+                                style={{ color: 'var(--accent-primary)' }}
+                            >
+                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]"></span>
+                                Ch. {chapterNumber || chapter}
+                            </p>
+                        )}
 
-                    {lastRead && (
-                        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                            {lastRead}
-                        </p>
-                    )}
+                        {lastRead && (
+                            <p className="text-[10px] pl-2.5" style={{ color: 'var(--text-muted)' }}>
+                                {lastRead}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {/* Remove button */}

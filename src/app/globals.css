@@ -7,64 +7,69 @@
 
 :root {
   /* ===================
-     KOTATSU COLORS (from colors_kotatsu.xml - Dark Theme)
+     KOTATSU COLORS (Refined Premium Dark Theme)
      =================== */
 
-  /* Primary - Blue accent */
-  --kotatsu-primary: #ABC7FF;
-  --kotatsu-primary-container: #00458F;
-  --kotatsu-on-primary: #002F65;
-  --kotatsu-on-primary-container: #D7E3FF;
-  --kotatsu-inverse-primary: #205DAF;
+  /* Primary - Vibrant Electric Blue */
+  --kotatsu-primary: #8DAFFF;
+  --kotatsu-primary-container: #003F88;
+  --kotatsu-on-primary: #00224D;
+  --kotatsu-on-primary-container: #DCE5FF;
+  --kotatsu-inverse-primary: #1C58A6;
 
-  /* Secondary - Blue-gray */
-  --kotatsu-secondary: #BEC6DC;
-  --kotatsu-secondary-container: #3E4759;
-  --kotatsu-on-secondary: #283041;
-  --kotatsu-on-secondary-container: #DAE2F9;
+  /* Secondary - Soft Lavender/Purple for accents */
+  --kotatsu-secondary: #C8BFFF;
+  --kotatsu-secondary-container: #423E5E;
+  --kotatsu-on-secondary: #2E294A;
+  --kotatsu-on-secondary-container: #E8E4FF;
 
-  /* Tertiary - Purple/Pink */
-  --kotatsu-tertiary: #DDBCE0;
-  --kotatsu-tertiary-container: #573E5C;
-  --kotatsu-on-tertiary: #3F2844;
-  --kotatsu-on-tertiary-container: #FAD8FD;
+  /* Tertiary - Teal/Cyan for variety */
+  --kotatsu-tertiary: #8FE8D9;
+  --kotatsu-tertiary-container: #005047;
+  --kotatsu-on-tertiary: #003731;
+  --kotatsu-on-tertiary-container: #AAF6E6;
 
-  /* Surface colors */
-  --kotatsu-surface: #121316;
-  --kotatsu-surface-dim: #121316;
-  --kotatsu-surface-bright: #38393C;
-  --kotatsu-surface-container-lowest: #0D0E11;
-  --kotatsu-surface-container-low: #1A1B1F;
-  --kotatsu-surface-container: #1F1F23;
-  --kotatsu-surface-container-high: #292A2D;
-  --kotatsu-surface-container-highest: #343538;
-  --kotatsu-surface-variant: #44474E;
-  --kotatsu-on-surface: #C7C6CA;
-  --kotatsu-on-surface-variant: #C4C6D0;
-  --kotatsu-inverse-surface: #E3E2E6;
-  --kotatsu-inverse-on-surface: #1A1B1F;
-  --kotatsu-background: #1A1B1F;
-  --kotatsu-outline: #8E9099;
+  /* Surface colors - Deep Blue-Grey Tones (Better than flat black) */
+  --kotatsu-surface: #0F1115;
+  --kotatsu-surface-dim: #0F1115;
+  --kotatsu-surface-bright: #353842;
+  --kotatsu-surface-container-lowest: #0A0B0E;
+  --kotatsu-surface-container-low: #14161A;
+  --kotatsu-surface-container: #1A1D23;
+  /* Main Card Bg */
+  --kotatsu-surface-container-high: #242830;
+  --kotatsu-surface-container-highest: #2E323B;
+  --kotatsu-surface-variant: #434754;
+  --kotatsu-on-surface: #ECEDEE;
+  /* High Contrast Text */
+  --kotatsu-on-surface-variant: #9FA4B2;
+  /* Muted Text */
+  --kotatsu-inverse-surface: #E0E2E8;
+  --kotatsu-inverse-on-surface: #1A1D23;
+  --kotatsu-background: #0A0B0E;
+  /* Deepest Background */
+  --kotatsu-outline: #727888;
 
-  /* Status Colors */
-  --kotatsu-error: #FFB4A9;
-  --kotatsu-error-container: #930006;
-  --kotatsu-on-error: #680003;
-  --kotatsu-warning: #FB8C00;
-  --kotatsu-success: #81C784;
-  --kotatsu-success-dim: #4CAF50;
+  /* Status Colors - More Vibrant */
+  --kotatsu-error: #FF897D;
+  --kotatsu-error-container: #93000A;
+  --kotatsu-on-error: #690005;
+  --kotatsu-warning: #FFB366;
+  --kotatsu-success: #66DB8C;
+  --kotatsu-success-dim: #388E55;
 
   /* ===================
      SEMANTIC ALIASES (for easier usage)
      =================== */
 
   /* Background Colors */
-  --bg-primary: var(--kotatsu-background);
+  --bg-primary: var(--kotatsu-surface-container-lowest);
   --bg-secondary: var(--kotatsu-surface-container-low);
   --bg-surface: var(--kotatsu-surface-container);
   --bg-elevated: var(--kotatsu-surface-container-high);
   --bg-card: var(--kotatsu-surface-container);
-  --bg-overlay: rgba(0, 0, 0, 0.6);
+  --bg-overlay: rgba(5, 7, 10, 0.7);
+  /* Darker, richer overlay */
 
   /* Text Colors */
   --text-primary: var(--kotatsu-on-surface);
@@ -81,9 +86,13 @@
   --accent-warning: var(--kotatsu-warning);
   --accent-error: var(--kotatsu-error);
 
+  /* Gradient Accents (New) */
+  --gradient-primary: linear-gradient(135deg, var(--kotatsu-primary), var(--kotatsu-secondary));
+  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+
   /* Border Colors */
   --border-default: var(--kotatsu-surface-variant);
-  --border-subtle: var(--kotatsu-surface-container-high);
+  --border-subtle: #2A2E37;
   --border-active: var(--kotatsu-primary);
 
   /* ===================
@@ -155,12 +164,14 @@
   --radius-full: 9999px;
 
   /* ===================
-     SHADOWS (Material Design elevation)
+     SHADOWS (Refined Soft Shadows)
      =================== */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.3), 0 16px 32px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 15px rgba(141, 175, 255, 0.3);
+  /* Glow effect for primary accents */
 
   /* ===================
      TRANSITIONS
@@ -532,4 +543,52 @@ body {
   100% {
     background-position: -200% 0;
   }
+}
+
+/* ============================================
+   MODERN UTILITIES (Glassmorphism & Gradients)
+   ============================================ */
+
+.glass {
+  background: rgba(10, 11, 14, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: linear-gradient(180deg, rgba(30, 32, 38, 0.8) 0%, rgba(20, 22, 26, 0.6) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--kotatsu-primary) 0%, var(--kotatsu-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.border-gradient {
+  position: relative;
+  background: var(--bg-surface);
+  background-clip: padding-box;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xl);
+}
+
+.border-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  margin: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--kotatsu-primary), var(--kotatsu-secondary));
 }

@@ -275,65 +275,86 @@ export default function SourcePage() {
 
     return (
         <div className="min-h-screen p-4 lg:p-6 relative">
-            {/* Header */}
-            <div className="mb-6 animate-fadeInUp">
+            {/* Hero Header Section */}
+            <div className="mb-8 animate-fadeInUp">
+                {/* F-Pattern Anchor Point: Top Left Back Button - Enhanced Visibility */}
                 <Link
                     href="/explore"
-                    className="inline-flex items-center gap-2 mb-4 text-sm hover:underline group"
-                    style={{ color: 'var(--accent-primary)' }}
+                    className="inline-flex items-center gap-2 mb-6 pl-1 text-sm font-semibold tracking-wide uppercase hover:text-[var(--accent-primary)] transition-colors group w-fit"
+                    style={{ color: 'var(--text-muted)' }}
                 >
-                    <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                    Kembali ke Sumber
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--bg-elevated)] group-hover:bg-[var(--kotatsu-primary-container)] group-hover:text-[var(--kotatsu-on-primary-container)] transition-all">
+                        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                    </div>
+                    <span className="group-hover:translate-x-1 transition-transform">Kembali ke Explore</span>
                 </Link>
 
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-white p-1 flex-shrink-0 shadow-sm relative">
-                        {sourceInfo.icon.startsWith('http') || sourceInfo.icon.startsWith('/') ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                src={sourceInfo.icon}
-                                alt={sourceInfo.name}
-                                className="w-full h-full object-contain"
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = `https://www.google.com/s2/favicons?domain=${sourceInfo.baseUrl || 'google.com'}&sz=128`;
-                                }}
-                            />
-                        ) : (
-                            <span className="text-4xl w-full h-full flex items-center justify-center">{sourceInfo.icon}</span>
-                        )}
-                        <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-xl"></div>
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                            {sourceInfo.name}
-                        </h1>
-                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                            {sourceInfo.description}
-                        </p>
+                <div className="relative p-6 md:p-10 rounded-[2rem] overflow-hidden glass-card group">
+                    {/* Decorative Background Glow */}
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-[var(--kotatsu-primary)] opacity-10 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:opacity-20 transition-opacity duration-700"></div>
+
+                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
+                        {/* Source Icon - Visual Anchor */}
+                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl overflow-hidden bg-white p-2 flex-shrink-0 shadow-xl relative transition-transform duration-500 group-hover:scale-105 group-hover:rotate-2">
+                            {sourceInfo.icon.startsWith('http') || sourceInfo.icon.startsWith('/') ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={sourceInfo.icon}
+                                    alt={sourceInfo.name}
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.src = `https://www.google.com/s2/favicons?domain=${sourceInfo.baseUrl || 'google.com'}&sz=128`;
+                                    }}
+                                />
+                            ) : (
+                                <span className="text-5xl w-full h-full flex items-center justify-center">{sourceInfo.icon}</span>
+                            )}
+                        </div>
+
+                        {/* Source Info - Typography Scale */}
+                        <div className="flex-1">
+                            <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tight text-gradient leading-tight">
+                                {sourceInfo.name}
+                            </h1>
+                            <p className="text-base md:text-lg mb-6 max-w-2xl leading-relaxed font-medium" style={{ color: 'var(--text-secondary)' }}>
+                                {sourceInfo.description}
+                            </p>
+
+                            {/* Metadata Badges - Alignment Grid */}
+                            <div className="flex flex-wrap gap-3">
+                                <span className="px-4 py-1.5 rounded-full text-xs font-bold tracking-wide border border-[var(--border-subtle)]" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
+                                    {sourceInfo.baseUrl}
+                                </span>
+                                <span className="px-4 py-1.5 rounded-full text-xs font-bold tracking-wide shadow-sm flex items-center gap-2" style={{ background: 'var(--kotatsu-success)', color: '#000' }}>
+                                    <span className="w-2 h-2 rounded-full bg-black animate-pulse"></span>
+                                    Online
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Search & Toolbar */}
             <div
-                className={`rounded-xl p-3 mb-4 sticky top-0 z-30 shadow-sm animate-fadeInUp backdrop-blur-sm transition-transform duration-300 will-change-transform ${!isVisible ? '-translate-y-[150%]' : 'translate-y-0'
+                className={`rounded-2xl p-4 mb-8 sticky top-4 z-30 shadow-lg animate-fadeInUp backdrop-blur-md border border-[var(--border-subtle)] transition-transform duration-300 will-change-transform ${!isVisible ? '-translate-y-[150%]' : 'translate-y-0'
                     }`}
                 style={{
-                    background: 'var(--bg-surface)',
+                    background: 'var(--bg-surface)', // Fallback & Main
                     border: '1px solid var(--border-default)',
                     animationDelay: '100ms'
                 }}
             >
-                <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex-grow min-w-[200px] relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
+                <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex-grow min-w-[200px] relative group-search">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-search-focus:text-[var(--accent-primary)] transition-colors" size={20} />
                         <input
                             type="text"
                             placeholder={`Cari di ${sourceInfo.name}...`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all text-sm"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all text-sm font-medium"
                             style={{
                                 background: 'var(--bg-elevated)',
                                 color: 'var(--text-primary)',
@@ -344,18 +365,18 @@ export default function SourcePage() {
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all hover:brightness-110 active:scale-95 text-sm font-medium"
+                        className="px-5 py-3 rounded-xl flex items-center gap-2.5 transition-all hover:brightness-110 active:scale-95 text-sm font-medium border"
                         style={{
                             background: showFilters || activeFilterCount > 0 ? 'var(--kotatsu-primary-container)' : 'var(--bg-elevated)',
                             color: showFilters || activeFilterCount > 0 ? 'var(--kotatsu-on-primary-container)' : 'var(--text-secondary)',
-                            border: '1px solid transparent',
+                            borderColor: showFilters || activeFilterCount > 0 ? 'transparent' : 'transparent',
                         }}
                     >
-                        <Filter size={16} />
-                        Filter
+                        <Filter size={18} />
+                        <span>Filter</span>
                         {activeFilterCount > 0 && (
                             <span
-                                className="w-5 h-5 flex items-center justify-center text-[10px] rounded-full font-bold -ml-1"
+                                className="min-w-[20px] h-5 flex items-center justify-center text-[10px] rounded-full font-bold px-1"
                                 style={{ background: 'var(--accent-primary)', color: 'var(--kotatsu-on-primary)' }}
                             >
                                 {activeFilterCount}
@@ -363,45 +384,45 @@ export default function SourcePage() {
                         )}
                     </button>
 
-                    <div className="h-8 w-[1px] bg-[var(--border-default)] mx-1 hidden sm:block"></div>
+                    <div className="h-8 w-[1px] bg-[var(--border-default)] hidden sm:block"></div>
 
                     <ViewToggle view={viewMode} onChange={handleViewChange} />
                 </div>
             </div>
 
-            {/* Filter Panel */}
+            {/* Filter Panel (Expandable) */}
             {showFilters && (
                 <div
-                    className="rounded-xl p-5 mb-6 animate-slideDown overflow-hidden"
-                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+                    className="rounded-2xl p-6 mb-8 animate-slideDown overflow-hidden border border-[var(--border-default)] shadow-sm"
+                    style={{ background: 'var(--bg-surface)' }}
                 >
                     <div className="mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-medium flex items-center gap-2 text-sm uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                                <BookOpen size={14} />
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold flex items-center gap-2 text-sm uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                                <BookOpen size={16} />
                                 Jenis Komik
                             </h3>
                             {selectedTypes.length > 0 && (
                                 <button
                                     onClick={() => setSelectedTypes([])}
-                                    className="text-xs hover:underline flex items-center gap-1"
-                                    style={{ color: 'var(--accent-primary)' }}
+                                    className="text-xs font-medium hover:underline flex items-center gap-1 transition-colors hover:text-[var(--accent-primary)]"
+                                    style={{ color: 'var(--text-secondary)' }}
                                 >
                                     <X size={12} />
                                     Reset
                                 </button>
                             )}
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2.5">
                             {COMIC_TYPES.map(type => (
                                 <button
                                     key={type}
                                     onClick={() => toggleType(type)}
-                                    className="px-4 py-2 rounded-full text-sm transition-all hover:-translate-y-0.5"
+                                    className="px-5 py-2 rounded-full text-sm font-medium transition-all hover:-translate-y-0.5"
                                     style={{
                                         background: selectedTypes.includes(type) ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                                         color: selectedTypes.includes(type) ? 'var(--kotatsu-on-primary)' : 'var(--text-secondary)',
-                                        boxShadow: selectedTypes.includes(type) ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                                        boxShadow: selectedTypes.includes(type) ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
                                     }}
                                 >
                                     {type}
@@ -411,28 +432,28 @@ export default function SourcePage() {
                     </div>
 
                     <div>
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-medium flex items-center gap-2 text-sm uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                                <Tag size={14} />
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold flex items-center gap-2 text-sm uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                                <Tag size={16} />
                                 Genre
                             </h3>
                             {selectedGenres.length > 0 && (
                                 <button
                                     onClick={() => setSelectedGenres([])}
-                                    className="text-xs hover:underline flex items-center gap-1"
-                                    style={{ color: 'var(--accent-primary)' }}
+                                    className="text-xs font-medium hover:underline flex items-center gap-1 transition-colors hover:text-[var(--accent-primary)]"
+                                    style={{ color: 'var(--text-secondary)' }}
                                 >
                                     <X size={12} />
                                     Reset
                                 </button>
                             )}
                         </div>
-                        <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto p-1 custom-scrollbar">
+                        <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto p-1 custom-scrollbar">
                             {GENRES.map(genre => (
                                 <button
                                     key={genre}
                                     onClick={() => toggleGenre(genre)}
-                                    className="px-3 py-1.5 rounded-lg text-xs transition-all hover:brightness-110"
+                                    className="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:brightness-110 active:scale-95"
                                     style={{
                                         background: selectedGenres.includes(genre) ? 'var(--kotatsu-secondary-container)' : 'var(--bg-elevated)',
                                         color: selectedGenres.includes(genre) ? 'var(--kotatsu-on-secondary-container)' : 'var(--text-secondary)',
@@ -446,10 +467,10 @@ export default function SourcePage() {
                     </div>
 
                     {activeFilterCount > 0 && (
-                        <div className="mt-4 pt-4 flex justify-end" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                        <div className="mt-6 pt-4 flex justify-end" style={{ borderTop: '1px solid var(--border-subtle)' }}>
                             <button
                                 onClick={clearFilters}
-                                className="text-sm flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-[var(--bg-elevated)] transition-colors"
+                                className="text-sm font-medium flex items-center gap-2 px-5 py-2.5 rounded-xl hover:bg-[var(--bg-elevated)] transition-colors"
                                 style={{ color: 'var(--accent-error)' }}
                             >
                                 <X size={16} />
@@ -460,19 +481,23 @@ export default function SourcePage() {
                 </div>
             )}
 
-            {/* Results Info */}
+            {/* Results Info - Aligned with Grid */}
             {!loading && mangaList.length > 0 && (
-                <div className="flex items-center justify-between mb-4 animate-fadeIn px-1">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-                        {filteredManga.length} hasil ditemukan
-                        {searchQuery && <span className="font-normal opacity-70"> untuk "{searchQuery}"</span>}
-                    </p>
+                <div className="flex items-center justify-between mb-6 animate-fadeIn">
+                    <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                        Hasil Pencarian
+                        <span className="text-sm font-normal px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] text-[var(--text-muted)]">
+                            {filteredManga.length}
+                        </span>
+                    </h2>
+
                     {activeFilterCount > 0 && filteredManga.length < mangaList.length && (
                         <button
                             onClick={clearFilters}
-                            className="text-sm hover:underline text-[var(--accent-primary)]"
+                            className="text-sm font-medium hover:underline transition-colors"
+                            style={{ color: 'var(--accent-primary)' }}
                         >
-                            Lihat semua
+                            Tampilkan Semua
                         </button>
                     )}
                 </div>
