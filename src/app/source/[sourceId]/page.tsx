@@ -346,15 +346,15 @@ export default function SourcePage() {
                     animationDelay: '100ms'
                 }}
             >
-                <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex-grow min-w-[180px] relative group-search">
+                <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0 relative group-search">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-search-focus:text-[var(--accent-primary)] transition-colors" size={18} />
                         <input
                             type="text"
-                            placeholder={`Cari di ${sourceInfo.name}...`}
+                            placeholder={`Cari...`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all text-sm font-medium"
+                            className="w-full pl-10 pr-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all text-sm font-medium"
                             style={{
                                 background: 'var(--bg-elevated)',
                                 color: 'var(--text-primary)',
@@ -365,26 +365,22 @@ export default function SourcePage() {
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all hover:brightness-110 active:scale-95 text-sm font-medium border"
+                        className="flex-shrink-0 p-2 rounded-lg flex items-center justify-center transition-all hover:brightness-110 active:scale-95"
                         style={{
                             background: showFilters || activeFilterCount > 0 ? 'var(--kotatsu-primary-container)' : 'var(--bg-elevated)',
                             color: showFilters || activeFilterCount > 0 ? 'var(--kotatsu-on-primary-container)' : 'var(--text-secondary)',
-                            borderColor: showFilters || activeFilterCount > 0 ? 'transparent' : 'transparent',
                         }}
                     >
-                        <Filter size={16} />
-                        <span className="hidden sm:inline">Filter</span>
+                        <Filter size={18} />
                         {activeFilterCount > 0 && (
                             <span
-                                className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] rounded-full font-bold px-1"
+                                className="ml-1 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] rounded-full font-bold"
                                 style={{ background: 'var(--accent-primary)', color: 'var(--kotatsu-on-primary)' }}
                             >
                                 {activeFilterCount}
                             </span>
                         )}
                     </button>
-
-                    <div className="h-8 w-[1px] bg-[var(--border-default)] hidden sm:block"></div>
 
                     <ViewToggle view={viewMode} onChange={handleViewChange} />
                 </div>
