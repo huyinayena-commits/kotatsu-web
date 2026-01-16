@@ -338,23 +338,23 @@ export default function SourcePage() {
 
             {/* Search & Toolbar */}
             <div
-                className={`rounded-2xl p-4 mb-8 sticky top-4 z-30 shadow-lg animate-fadeInUp backdrop-blur-md border border-[var(--border-subtle)] transition-transform duration-300 will-change-transform ${!isVisible ? '-translate-y-[150%]' : 'translate-y-0'
+                className={`rounded-xl p-3 md:p-4 mb-6 sticky top-2 z-30 shadow-lg animate-fadeInUp backdrop-blur-md border border-[var(--border-subtle)] transition-transform duration-300 will-change-transform ${!isVisible ? '-translate-y-[150%]' : 'translate-y-0'
                     }`}
                 style={{
-                    background: 'var(--bg-surface)', // Fallback & Main
+                    background: 'var(--bg-surface)',
                     border: '1px solid var(--border-default)',
                     animationDelay: '100ms'
                 }}
             >
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex-grow min-w-[200px] relative group-search">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-search-focus:text-[var(--accent-primary)] transition-colors" size={20} />
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex-grow min-w-[180px] relative group-search">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-search-focus:text-[var(--accent-primary)] transition-colors" size={18} />
                         <input
                             type="text"
                             placeholder={`Cari di ${sourceInfo.name}...`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all text-sm font-medium"
+                            className="w-full pl-10 pr-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all text-sm font-medium"
                             style={{
                                 background: 'var(--bg-elevated)',
                                 color: 'var(--text-primary)',
@@ -365,18 +365,18 @@ export default function SourcePage() {
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="px-5 py-3 rounded-xl flex items-center gap-2.5 transition-all hover:brightness-110 active:scale-95 text-sm font-medium border"
+                        className="px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all hover:brightness-110 active:scale-95 text-sm font-medium border"
                         style={{
                             background: showFilters || activeFilterCount > 0 ? 'var(--kotatsu-primary-container)' : 'var(--bg-elevated)',
                             color: showFilters || activeFilterCount > 0 ? 'var(--kotatsu-on-primary-container)' : 'var(--text-secondary)',
                             borderColor: showFilters || activeFilterCount > 0 ? 'transparent' : 'transparent',
                         }}
                     >
-                        <Filter size={18} />
-                        <span>Filter</span>
+                        <Filter size={16} />
+                        <span className="hidden sm:inline">Filter</span>
                         {activeFilterCount > 0 && (
                             <span
-                                className="min-w-[20px] h-5 flex items-center justify-center text-[10px] rounded-full font-bold px-1"
+                                className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] rounded-full font-bold px-1"
                                 style={{ background: 'var(--accent-primary)', color: 'var(--kotatsu-on-primary)' }}
                             >
                                 {activeFilterCount}
