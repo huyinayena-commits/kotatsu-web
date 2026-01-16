@@ -121,7 +121,7 @@ export function HeroCarousel() {
                                 <Star size={12} fill="currentColor" /> Featured
                             </div>
                             {slide.status && (
-                                <div className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-white/10 text-white border border-white/10 backdrop-blur-md flex items-center gap-2">
+                                <div className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-black/70 text-white border border-white/10 backdrop-blur-md flex items-center gap-2">
                                     <Calendar size={12} /> {slide.status}
                                 </div>
                             )}
@@ -148,7 +148,7 @@ export function HeroCarousel() {
                             </Link>
 
                             {slide.rating !== undefined && slide.rating > 0 && (
-                                <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 text-white">
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-black/70 backdrop-blur-md border border-white/10 text-white">
                                     <Star size={18} className="text-yellow-400" fill="currentColor" />
                                     <span className="font-bold text-lg">{slide.rating}</span>
                                 </div>
@@ -162,14 +162,14 @@ export function HeroCarousel() {
             <div className="absolute right-6 bottom-6 flex gap-3 z-20">
                 <button
                     onClick={prevSlide}
-                    className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 backdrop-blur-md flex items-center justify-center text-white transition-all hover:scale-110 active:scale-90"
+                    className="w-12 h-12 rounded-full bg-black/60 hover:bg-black/80 border border-white/10 backdrop-blur-md flex items-center justify-center text-white transition-all hover:scale-110 active:scale-90"
                     aria-label="Previous slide"
                 >
                     <ChevronLeft size={24} />
                 </button>
                 <button
                     onClick={nextSlide}
-                    className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 backdrop-blur-md flex items-center justify-center text-white transition-all hover:scale-110 active:scale-90"
+                    className="w-12 h-12 rounded-full bg-black/60 hover:bg-black/80 border border-white/10 backdrop-blur-md flex items-center justify-center text-white transition-all hover:scale-110 active:scale-90"
                     aria-label="Next slide"
                 >
                     <ChevronRight size={24} />
@@ -177,17 +177,21 @@ export function HeroCarousel() {
             </div>
 
             {/* Pagination Indicators */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:left-10 md:translate-x-0 z-20 flex gap-2">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:left-10 md:translate-x-0 z-20 flex gap-1">
                 {slides.map((_, index) => (
                     <button
                         key={index}
                         onClick={() => setCurrentSlide(index)}
-                        className={`transition-all duration-500 rounded-full h-1.5 ${index === currentSlide
-                                ? 'w-8 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]'
-                                : 'w-2 bg-white/30 hover:bg-white/60'
-                            }`}
+                        className="p-2 -m-1 touch-manipulation"
                         aria-label={`Go to slide ${index + 1}`}
-                    />
+                    >
+                        <span
+                            className={`block transition-all duration-500 rounded-full h-1.5 ${index === currentSlide
+                                ? 'w-8 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]'
+                                : 'w-2 bg-white/30'
+                                }`}
+                        />
+                    </button>
                 ))}
             </div>
         </div>

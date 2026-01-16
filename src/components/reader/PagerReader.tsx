@@ -143,7 +143,7 @@ export default function PagerReader({
                 <span
                     className="px-3 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm"
                     style={{
-                        background: 'rgba(0,0,0,0.7)',
+                        background: 'rgba(0,0,0,0.8)',
                         color: currentPage > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
                     }}
                 >
@@ -151,14 +151,14 @@ export default function PagerReader({
                 </span>
                 <span
                     className="px-3 py-1 rounded-full text-xs backdrop-blur-sm"
-                    style={{ background: 'rgba(0,0,0,0.7)', color: 'var(--text-primary)' }}
+                    style={{ background: 'rgba(0,0,0,0.8)', color: 'var(--text-primary)' }}
                 >
                     {currentPage + 1} / {pages.length}
                 </span>
                 <span
                     className="px-3 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm"
                     style={{
-                        background: 'rgba(0,0,0,0.7)',
+                        background: 'rgba(0,0,0,0.8)',
                         color: currentPage < pages.length - 1 ? 'var(--text-primary)' : 'var(--text-muted)',
                     }}
                 >

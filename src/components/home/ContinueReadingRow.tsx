@@ -26,12 +26,12 @@ export function ContinueReadingRow({ items }: ContinueReadingRowProps) {
                 </Link>
             </div>
 
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-px-4 px-4 -mx-4 snap-x snap-mandatory">
                 {items.slice(0, 6).map((item) => (
                     <Link
                         key={`${item.mangaId}-${item.source}`}
                         href={`/read/${item.source}/${item.mangaId}/${item.chapterId}`}
-                        className="group relative flex-shrink-0 w-[140px] md:w-[160px] flex flex-col gap-2 transition-transform hover:-translate-y-1"
+                        className="group relative flex-shrink-0 w-[140px] md:w-[160px] flex flex-col gap-2 transition-transform hover:-translate-y-1 snap-start"
                     >
                         {/* Cover Container */}
                         <div
@@ -53,7 +53,7 @@ export function ContinueReadingRow({ items }: ContinueReadingRowProps) {
                             )}
 
                             {/* Overlay Play Button */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                                 <div className="w-10 h-10 rounded-full bg-[var(--accent-primary)] flex items-center justify-center text-white shadow-lg transform scale-50 group-hover:scale-100 transition-transform duration-300">
                                     <Play size={18} fill="currentColor" className="ml-0.5" />
                                 </div>
