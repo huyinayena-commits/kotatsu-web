@@ -10,37 +10,32 @@ interface ViewToggleProps {
 export default function ViewToggle({ view, onChange }: ViewToggleProps) {
     return (
         <div
-            className="flex rounded-lg overflow-hidden p-1 gap-1"
+            className="flex rounded-md overflow-hidden p-0.5 gap-0.5 flex-shrink-0"
             style={{
                 background: 'var(--bg-elevated)',
-                border: '1px solid var(--border-default)',
             }}
         >
             <button
                 onClick={() => onChange('grid')}
-                className="px-3 py-1.5 text-sm transition-all rounded-md flex items-center gap-2 hover:bg-[var(--bg-surface)]"
+                className="p-1.5 transition-all rounded flex items-center justify-center"
                 style={{
                     background: view === 'grid' ? 'var(--accent-primary)' : 'transparent',
                     color: view === 'grid' ? 'var(--kotatsu-on-primary)' : 'var(--text-muted)',
-                    boxShadow: view === 'grid' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
                 }}
                 title="Grid View"
             >
-                <Grid size={18} />
-                <span className="hidden sm:inline">Grid</span>
+                <Grid size={16} />
             </button>
             <button
                 onClick={() => onChange('list')}
-                className="px-3 py-1.5 text-sm transition-all rounded-md flex items-center gap-2 hover:bg-[var(--bg-surface)]"
+                className="p-1.5 transition-all rounded flex items-center justify-center"
                 style={{
                     background: view === 'list' ? 'var(--accent-primary)' : 'transparent',
                     color: view === 'list' ? 'var(--kotatsu-on-primary)' : 'var(--text-muted)',
-                    boxShadow: view === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
                 }}
                 title="List View"
             >
-                <List size={18} />
-                <span className="hidden sm:inline">List</span>
+                <List size={16} />
             </button>
         </div>
     );
