@@ -427,9 +427,9 @@ export default function ExplorePage() {
 
             {/* Empty State */}
             {filteredSources.length === 0 && (
-                <div className="text-center py-20 animate-fadeIn">
-                    <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
-                        <Search size={40} className="text-[var(--text-muted)] opacity-50" />
+                <div className="text-center py-10 sm:py-20 animate-fadeIn">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
+                        <Search size={32} className="text-[var(--text-muted)] opacity-50 sm:w-10 sm:h-10" />
                     </div>
                     <p className="text-lg font-medium" style={{ color: 'var(--text-muted)' }}>
                         Tidak ada sumber yang cocok dengan filter.
@@ -449,7 +449,7 @@ export default function ExplorePage() {
 
             {/* Info Box */}
             <div
-                className="mt-8 rounded-xl p-6 flex gap-4 animate-slideUp"
+                className="mt-6 sm:mt-8 rounded-xl p-4 sm:p-6 flex gap-3 sm:gap-4 animate-slideUp"
                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
             >
                 <div className="flex-shrink-0 text-[var(--accent-primary)]">

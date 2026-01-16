@@ -191,7 +191,7 @@ export default function MangaDetailPage() {
                 {/* Manga Info Section */}
                 <div className="flex flex-col sm:flex-row gap-6 mb-6">
                     {/* Cover */}
-                    <div className="flex-shrink-0 mx-auto sm:mx-0" style={{ width: '160px' }}>
+                    <div className="flex-shrink-0 mx-auto sm:mx-0 w-[140px] sm:w-[160px] md:w-[180px]">
                         <div
                             className="rounded-xl overflow-hidden"
                             style={{
@@ -315,11 +315,11 @@ export default function MangaDetailPage() {
 
                 {/* Genres */}
                 {manga.genres.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none sm:flex-wrap sm:overflow-visible">
                         {manga.genres.map((genre, idx) => (
                             <span
                                 key={idx}
-                                className="px-3 py-1 rounded-lg text-xs"
+                                className="px-3 py-1 rounded-lg text-xs whitespace-nowrap"
                                 style={{
                                     background: 'var(--bg-surface)',
                                     color: 'var(--text-secondary)',
@@ -391,7 +391,7 @@ export default function MangaDetailPage() {
 
                             <button
                                 onClick={() => isSelectMode ? exitSelectMode() : setIsSelectMode(true)}
-                                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
+                                className="px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap min-w-[44px] flex items-center justify-center"
                                 style={{
                                     background: isSelectMode ? 'var(--accent-primary)' : 'var(--bg-elevated)',
                                     color: isSelectMode ? 'white' : 'var(--text-secondary)',
@@ -403,7 +403,7 @@ export default function MangaDetailPage() {
                     </div>
 
                     {/* Chapter Items */}
-                    <ScrollableContainer height="400px">
+                    <ScrollableContainer height="auto" className="max-h-[60vh] sm:max-h-[500px]">
                         {filteredChapters.length > 0 ? (
                             <ChapterList
                                 chapters={filteredChapters}

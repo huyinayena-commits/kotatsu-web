@@ -230,7 +230,7 @@ export default function UpdatesPage() {
                                 {/* Cover */}
                                 <Link href={`/manga/${update.source}/${update.mangaId}`} className="flex-shrink-0">
                                     <div
-                                        className="w-20 h-28 rounded-lg overflow-hidden relative"
+                                        className="w-16 h-24 sm:w-20 sm:h-28 rounded-lg overflow-hidden relative"
                                         style={{ background: 'var(--bg-elevated)' }}
                                     >
                                         {update.mangaCover ? (
@@ -286,9 +286,9 @@ export default function UpdatesPage() {
                     ))}
                 </div>
             ) : library.length === 0 ? (
-                <div className="text-center py-20 animate-fadeIn">
-                    <div className="w-20 h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
-                        <Heart size={40} className="text-[var(--text-muted)] opacity-50" />
+                <div className="text-center py-10 sm:py-20 animate-fadeIn">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center mx-auto mb-4">
+                        <Heart size={32} className="text-[var(--text-muted)] opacity-50 sm:w-10 sm:h-10" />
                     </div>
                     <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Belum ada manga di library.</p>
                     <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
@@ -339,7 +339,7 @@ export default function UpdatesPage() {
 
             {/* Info Box */}
             <div
-                className="mt-8 rounded-xl p-5 animate-fadeInUp"
+                className="mt-6 sm:mt-8 rounded-xl p-4 sm:p-5 animate-fadeInUp"
                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
             >
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>

@@ -369,9 +369,9 @@ export default function LibraryPage() {
                                                         </Link>
                                                         <button
                                                             onClick={() => handleRemoveFromHistory(item.mangaId, item.source)}
-                                                            className="px-3 py-2 text-[var(--text-muted)] hover:text-[var(--accent-error)] hover:bg-[var(--accent-error)]/10 text-sm rounded-lg transition-colors"
+                                                            className="p-2 sm:px-3 sm:py-2 text-[var(--text-muted)] hover:text-[var(--accent-error)] hover:bg-[var(--accent-error)]/10 text-sm rounded-lg transition-colors min-w-[40px] flex items-center justify-center border border-[var(--border-default)] sm:border-transparent"
                                                         >
-                                                            <X size={18} />
+                                                            <X size={20} />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -497,7 +497,7 @@ export default function LibraryPage() {
 
                         {/* Source Tabs */}
                         {uniqueSources.length > 1 && (
-                            <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none">
+                            <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
                                 <button
                                     onClick={() => setSelectedSource('all')}
                                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 flex-shrink-0 ${selectedSource === 'all'
