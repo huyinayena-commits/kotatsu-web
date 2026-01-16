@@ -204,7 +204,7 @@ export default function MgkomikDetailPage() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{manga.title}</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{manga.title}</h2>
                         {manga.altTitle && <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>{manga.altTitle}</p>}
 
                         <div className="flex flex-wrap gap-2 mb-4">
@@ -230,18 +230,18 @@ export default function MgkomikDetailPage() {
                             )}
                         </div>
 
-                        <div className="flex gap-3 flex-wrap">
+                        <div className="flex gap-2 sm:gap-3 flex-col sm:flex-row">
                             {lastRead ? (
-                                <Link href={`/read/mgkomik/${manga.id}/${lastRead.chapterId}`} className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2" style={{ background: 'var(--accent-primary)', color: 'white' }}>
+                                <Link href={`/read/mgkomik/${manga.id}/${lastRead.chapterId}`} className="px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm sm:text-base" style={{ background: 'var(--accent-primary)', color: 'white' }}>
                                     ▶ Lanjut Ch. {lastRead.chapterNumber}
                                 </Link>
                             ) : firstChapter ? (
-                                <Link href={`/read/mgkomik/${manga.id}/${firstChapter.id}`} className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2" style={{ background: 'var(--accent-primary)', color: 'white' }}>
+                                <Link href={`/read/mgkomik/${manga.id}/${firstChapter.id}`} className="px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm sm:text-base" style={{ background: 'var(--accent-primary)', color: 'white' }}>
                                     ▶ Mulai Baca
                                 </Link>
                             ) : null}
 
-                            <button onClick={handleToggleBookmark} className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2" style={{
+                            <button onClick={handleToggleBookmark} className="px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm sm:text-base" style={{
                                 background: isBookmarked ? 'rgba(168, 85, 247, 0.2)' : 'var(--bg-surface)',
                                 color: isBookmarked ? 'var(--accent-primary)' : 'var(--text-secondary)',
                                 border: `1px solid ${isBookmarked ? 'var(--accent-primary)' : 'var(--border-default)'}`,
@@ -340,8 +340,8 @@ export default function MgkomikDetailPage() {
             </main>
 
             {lastRead && (
-                <Link href={`/read/mgkomik/${manga.id}/${lastRead.chapterId}`} className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 px-5 py-3 rounded-full shadow-lg hover:scale-105 flex items-center gap-2 z-30" style={{ background: 'var(--accent-primary)', color: 'white', boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)' }}>
-                    ▶ Lanjut Baca
+                <Link href={`/read/mgkomik/${manga.id}/${lastRead.chapterId}`} className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 px-4 py-2.5 rounded-full shadow-lg hover:scale-105 flex items-center gap-2 z-30 text-sm" style={{ background: 'var(--accent-primary)', color: 'white', boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)' }}>
+                    ▶ Lanjut
                 </Link>
             )}
         </div>

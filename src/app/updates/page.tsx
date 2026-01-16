@@ -128,9 +128,9 @@ export default function UpdatesPage() {
     return (
         <div className="min-h-screen p-4 lg:p-6 mb-20 lg:mb-0">
             {/* Page Header */}
-            <div className="flex items-center justify-between mb-6 animate-fadeIn">
-                <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                    <Bell className="text-[var(--accent-primary)]" /> Update Bab Baru
+            <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fadeIn">
+                <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <Bell className="text-[var(--accent-primary)]" size={20} /> Update Bab
                 </h1>
                 <button
                     onClick={checkForUpdates}
@@ -156,32 +156,32 @@ export default function UpdatesPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 animate-fadeInUp">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 animate-fadeInUp">
                 <div
-                    className="rounded-xl p-5 text-center transition-transform hover:-translate-y-1"
+                    className="rounded-xl p-3 sm:p-4 text-center"
                     style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
                 >
-                    <p className="text-3xl font-bold mb-1 flex items-center justify-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                        <BookOpen size={24} className="text-[var(--text-muted)]" /> {library.length}
+                    <p className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: 'var(--text-primary)' }}>
+                        {library.length}
                     </p>
-                    <p style={{ color: 'var(--text-muted)' }}>Manga di Library</p>
+                    <p className="text-[10px] sm:text-xs" style={{ color: 'var(--text-muted)' }}>Library</p>
                 </div>
                 <div
-                    className="rounded-xl p-5 text-center transition-transform hover:-translate-y-1 shadow-lg"
+                    className="rounded-xl p-3 sm:p-4 text-center"
                     style={{ background: 'var(--kotatsu-primary-container)', border: '1px solid var(--accent-primary)' }}
                 >
-                    <p className="text-3xl font-bold mb-1 flex items-center justify-center gap-2" style={{ color: 'var(--kotatsu-on-primary-container)' }}>
-                        <Bell size={24} /> {updates.length}
+                    <p className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: 'var(--kotatsu-on-primary-container)' }}>
+                        {updates.length}
                     </p>
-                    <p style={{ color: 'var(--kotatsu-on-primary-container)' }}>Ada Update Baru</p>
+                    <p className="text-[10px] sm:text-xs" style={{ color: 'var(--kotatsu-on-primary-container)' }}>Update</p>
                 </div>
                 <div
-                    className="rounded-xl p-5 text-center transition-transform hover:-translate-y-1"
+                    className="rounded-xl p-3 sm:p-4 text-center"
                     style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
                 >
-                    <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>Terakhir diperiksa</p>
-                    <p className="font-medium flex items-center justify-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                        {lastChecked ? formatTimeAgo(lastChecked) : 'Belum pernah'}
+                    <p className="text-[10px] sm:text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>Dicek</p>
+                    <p className="text-xs sm:text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                        {lastChecked ? formatTimeAgo(lastChecked) : '-'}
                     </p>
                 </div>
             </div>

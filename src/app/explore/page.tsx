@@ -183,31 +183,31 @@ export default function ExplorePage() {
     return (
         <div className="min-h-screen p-4 lg:p-6">
             {/* Page Header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                    <Globe size={24} className="text-[var(--accent-primary)]" />
+            <div className="mb-4 sm:mb-6">
+                <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <Globe size={20} className="text-[var(--accent-primary)]" />
                     Jelajahi Sumber
                 </h1>
-                <p style={{ color: 'var(--text-secondary)' }}>
-                    Pilih sumber manga favoritmu dari berbagai platform
+                <p className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Pilih sumber manga favoritmu
                 </p>
             </div>
 
             {/* Filters Toolbar */}
             <div
-                className="rounded-xl p-4 mb-6"
+                className="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6"
                 style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
             >
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
                     {/* Search */}
-                    <div className="flex-grow min-w-[200px] relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={18} />
+                    <div className="flex-1 min-w-0 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
                         <input
                             type="text"
-                            placeholder="Cari sumber..."
+                            placeholder="Cari..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all"
+                            className="w-full pl-9 pr-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all text-sm"
                             style={{
                                 background: 'var(--bg-elevated)',
                                 color: 'var(--text-primary)',

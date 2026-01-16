@@ -90,7 +90,7 @@ export default function Home() {
     ];
 
     return (
-        <div className="min-h-screen p-4 lg:p-6 mb-16 lg:mb-0">
+        <div className="min-h-screen p-3 sm:p-4 lg:p-6 mb-16 lg:mb-0">
             {/* Hero Section */}
             <div className="animate-fadeIn">
                 <HeroCarousel />
@@ -105,10 +105,10 @@ export default function Home() {
             <section className="animate-fadeInUp" style={{ animationDelay: '200ms' }}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                            <Flame className="text-[var(--accent-error)]" /> Manga Terbaru
+                        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                            <Flame className="text-[var(--accent-error)]" size={20} /> Manga Terbaru
                         </h2>
-                        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                        <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
                             Update terbaru dari sumber favoritmu
                         </p>
                     </div>
@@ -135,13 +135,13 @@ export default function Home() {
                 </div>
 
                 {/* Modern Source Tabs */}
-                <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none -mx-2 px-2">
+                <div className="flex gap-1.5 sm:gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none -mx-3 px-3 sm:-mx-2 sm:px-2">
                     {sources.map((source) => (
                         <button
                             key={source.id}
                             onClick={() => setCurrentSource(source.id)}
-                            className={`relative px-5 py-2.5 rounded-full text-sm font-bold tracking-wide whitespace-nowrap transition-all flex items-center gap-2 ${currentSource === source.id
-                                ? 'text-white shadow-lg shadow-[var(--accent-primary)]/25 scale-105'
+                            className={`relative px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide whitespace-nowrap transition-all flex items-center gap-1.5 min-h-[40px] ${currentSource === source.id
+                                ? 'text-white shadow-lg shadow-[var(--accent-primary)]/25'
                                 : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]'
                                 }`}
                             style={{
@@ -149,17 +149,9 @@ export default function Home() {
                                 border: currentSource === source.id ? 'none' : '1px solid var(--border-subtle)',
                             }}
                         >
-                            {/* Dot indicator for active */}
-                            {currentSource === source.id && (
-                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-primary)] opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--accent-primary)]"></span>
-                                </span>
-                            )}
-
                             {source.name}
-                            {source.status === 'timeout' && <Timer size={14} className="text-[var(--accent-warning)]" />}
-                            {source.status === 'blocked' && <Ban size={14} className="text-[var(--accent-error)]" />}
+                            {source.status === 'timeout' && <Timer size={12} className="text-[var(--accent-warning)]" />}
+                            {source.status === 'blocked' && <Ban size={12} className="text-[var(--accent-error)]" />}
                         </button>
                     ))}
                 </div>

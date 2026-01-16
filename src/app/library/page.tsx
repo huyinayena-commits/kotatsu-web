@@ -223,29 +223,29 @@ export default function LibraryPage() {
     return (
         <div className="min-h-screen p-4 lg:p-6 mb-16 lg:mb-0">
             {/* Page Header */}
-            <div className="mb-6 animate-fadeIn">
-                <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                    <BookOpen className="text-[var(--accent-primary)]" /> Perpustakaan Saya
+            <div className="mb-4 sm:mb-6 animate-fadeIn">
+                <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    <BookOpen className="text-[var(--accent-primary)]" size={20} /> Perpustakaan
                 </h1>
             </div>
 
             <main>
                 {/* Tab Switcher */}
-                <div className="flex gap-2 mb-6 animate-slideDown">
+                <div className="flex gap-2 mb-4 sm:mb-6 animate-slideDown">
                     <button
                         onClick={() => setActiveTab('history')}
-                        className="px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
+                        className="px-3 sm:px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-1.5 text-sm"
                         style={{
                             background: activeTab === 'history' ? 'var(--accent-primary)' : 'var(--bg-surface)',
                             color: activeTab === 'history' ? 'var(--kotatsu-on-primary)' : 'var(--text-secondary)',
                             border: `1px solid ${activeTab === 'history' ? 'var(--accent-primary)' : 'var(--border-default)'}`,
                         }}
                     >
-                        <Clock size={16} /> Riwayat ({history.length})
+                        <Clock size={14} /> Riwayat ({history.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('library')}
-                        className="px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2"
+                        className="px-3 sm:px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-1.5 text-sm"
                         style={{
                             background: activeTab === 'library' ? 'var(--accent-primary)' : 'var(--bg-surface)',
                             color: activeTab === 'library' ? 'var(--kotatsu-on-primary)' : 'var(--text-secondary)',
