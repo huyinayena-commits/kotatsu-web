@@ -25,7 +25,8 @@ import {
     CheckCircle2,
     Tv,
     Skull,
-    Book
+    Book,
+    Compass
 } from 'lucide-react';
 import {
     getLibrary,
