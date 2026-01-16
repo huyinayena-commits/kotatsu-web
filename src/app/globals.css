@@ -221,6 +221,20 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Safe area untuk Android notch/punch-hole */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Mobile-first responsive typography */
+@media (max-width: 640px) {
+  :root {
+    --text-headline-small: 20px;
+    --text-title-large: 18px;
+    --text-title-medium: 14px;
+    --text-body-medium: 13px;
+  }
 }
 
 /* ============================================
