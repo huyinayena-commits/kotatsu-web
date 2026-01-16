@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -31,7 +31,7 @@ interface APIResponse {
     error?: string;
 }
 
-export default function SearchPage() {
+function SearchContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialQuery = searchParams.get('q') || '';
@@ -133,7 +133,7 @@ export default function SearchPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <>
             {/* Header */}
             <header className="sticky top-0 z-50 backdrop-blur-lg bg-slate-900/80 border-b border-purple-500/20">
                 <div className="container mx-auto px-4 py-4">
@@ -281,6 +281,24 @@ export default function SearchPage() {
                     </p>
                 </div>
             </footer>
+        </>
+    );
+}
+
+function SearchLoading() {
+    return (
+        <div className="min-h-screen flex items-center justify-center">
+            <Loader2 size={40} className="animate-spin text-purple-400" />
+        </div>
+    );
+}
+
+export default function SearchPage() {
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+            <Suspense fallback={<SearchLoading />}>
+                <SearchContent />
+            </Suspense>
         </div>
     );
 }
