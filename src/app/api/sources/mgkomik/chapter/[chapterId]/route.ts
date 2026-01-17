@@ -1,21 +1,64 @@
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
-const BASE_URL = "https://mgkomik.org";
+const BASE_URL = "https://id.mgkomik.cc";
 
-function generateRandomString(length: number): string {
-    const charset = "HALOGaES.BCDFHIJKMNPQRTUVWXYZ.bcdefghijklmnopqrstuvwxyz0123456789";
-    return Array.from({ length }, () => charset[Math.floor(Math.random() * charset.length)]).join('');
+// Rotate User Agents
+const USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+];
+
+function getRandomUserAgent(): string {
+    return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 }
 
 function getHeaders(): HeadersInit {
     return {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+        'User-Agent': getRandomUserAgent(),
         'Referer': BASE_URL,
-        'X-Requested-With': generateRandomString(15),
+        'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'same-origin',
+        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'max-age=0',
     };
+}
+
+async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, {
+                headers: getHeaders(),
+                next: { revalidate: 60 },
+            });
+
+            if (response.ok) {
+                return response;
+            }
+
+            if (response.status === 403) {
+                await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
+                continue;
+            }
+
+            lastError = new Error(`HTTP ${response.status}`);
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error('Unknown error');
+            await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
+        }
+    }
+
+    throw lastError || new Error('Failed after retries');
 }
 
 interface Params {
@@ -33,56 +76,70 @@ export async function GET(request: Request, { params }: Params) {
             ? `${BASE_URL}/komik/${mangaId}/${chapterId}/`
             : `${BASE_URL}/${chapterId}/`;
 
-        const response = await fetch(url, {
-            headers: getHeaders(),
-            next: { revalidate: 300 },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch chapter: ${response.status}`);
-        }
-
+        const response = await fetchWithRetry(url);
         const html = await response.text();
         const $ = cheerio.load(html);
 
         // Get manga info from chapter page
-        const mangaTitle = $('.rate-title, .breadcrumb li').eq(-2).text().trim() || 'Unknown';
-        const $mangaLink = $('ol.breadcrumb li a').eq(-2);
+        const mangaTitle = $('.rate-title, .breadcrumb li, .allc a').eq(-2).text().trim() ||
+            $('ol.breadcrumb li').eq(-2).text().trim() ||
+            'Unknown';
+        const $mangaLink = $('ol.breadcrumb li a, .allc a').eq(-2);
         const mangaHref = $mangaLink.attr('href') || '';
         const derivedMangaId = mangaHref.split('/').filter(Boolean).pop() || mangaId;
 
         // Get chapter info
-        const chapterTitle = $('h1, .chapter-heading').first().text().trim();
-        const numMatch = chapterTitle.match(/chapter\s*(\d+(?:\.\d+)?)/i);
+        const chapterTitle = $('h1, .entry-title, .chapter-heading').first().text().trim();
+        const numMatch = chapterTitle.match(/chapter\s*(\d+(?:\.\d+)?)/i) ||
+            chapterTitle.match(/ch\.?\s*(\d+(?:\.\d+)?)/i);
         const chapterNumber = numMatch ? parseFloat(numMatch[1]) : 1;
 
         // Get page images
         const pages: PageData[] = [];
 
         // Madara uses various image containers
-        $('.reading-content img, .page-break img, .wp-manga-chapter-img').each((index, el) => {
-            const $img = $(el);
-            let imgUrl = $img.attr('data-src') || $img.attr('src') || '';
+        const imageSelectors = [
+            '.reading-content img',
+            '.page-break img',
+            '.wp-manga-chapter-img',
+            '#readerarea img',
+            '.ts-main-image',
+            '.size-full',
+        ];
 
-            // Clean URL
-            imgUrl = imgUrl.trim();
-            if (!imgUrl || imgUrl.includes('loading') || imgUrl.includes('placeholder')) return;
+        for (const selector of imageSelectors) {
+            $(selector).each((_, el) => {
+                const $img = $(el);
+                let imgUrl = $img.attr('data-src') ||
+                    $img.attr('data-lazy-src') ||
+                    $img.attr('data-cfsrc') ||
+                    $img.attr('src') || '';
 
-            pages.push({
-                index: pages.length,
-                url: imgUrl,
+                // Clean URL
+                imgUrl = imgUrl.trim();
+                if (!imgUrl || imgUrl.includes('loading') || imgUrl.includes('placeholder') || imgUrl.includes('data:')) return;
+
+                // Avoid duplicates
+                if (pages.some(p => p.url === imgUrl)) return;
+
+                pages.push({
+                    index: pages.length,
+                    url: imgUrl,
+                });
             });
-        });
+
+            if (pages.length > 0) break;
+        }
 
         // Get prev/next chapter links
-        const prevLink = $('.nav-previous a, .prev_page').first().attr('href') || '';
-        const nextLink = $('.nav-next a, .next_page').first().attr('href') || '';
+        const prevLink = $('.nav-previous a, .prev_page, .ch-prev-btn').first().attr('href') || '';
+        const nextLink = $('.nav-next a, .next_page, .ch-next-btn').first().attr('href') || '';
 
         const prevChapterId = prevLink ? prevLink.split('/').filter(Boolean).pop() || null : null;
         const nextChapterId = nextLink ? nextLink.split('/').filter(Boolean).pop() || null : null;
 
         // Get manga cover from page if available
-        const mangaCover = $('.site-logo img, .breadcrumb-image img').first().attr('src') || '';
+        const mangaCover = $('.site-logo img, .breadcrumb-image img, .thumb img').first().attr('src') || '';
 
         const chapter: ChapterInfo = {
             id: chapterId,
@@ -106,7 +163,11 @@ export async function GET(request: Request, { params }: Params) {
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
-            { success: false, error: message },
+            {
+                success: false,
+                error: message,
+                hint: 'Source mungkin sedang diblokir atau down. Coba gunakan VPN.'
+            },
             { status: 500 }
         );
     }

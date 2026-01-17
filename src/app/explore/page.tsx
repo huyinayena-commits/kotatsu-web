@@ -39,7 +39,7 @@ const SOURCES: SourceInfo[] = [
         status: 'active',
         description: 'Platform Madara dengan koleksi manga dan manhwa terlengkap.',
         genres: ['Action', 'Romance', 'Fantasy', 'Isekai', 'Manhwa'],
-        baseUrl: 'mgkomik.org',
+        baseUrl: 'id.mgkomik.cc',
         icon: 'https://id.mgkomik.cc/wp-content/uploads/2023/05/cropped-MG-32x32.png',
     },
     {
