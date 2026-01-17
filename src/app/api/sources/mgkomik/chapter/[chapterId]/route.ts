@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
-const BASE_URL = "https://id.mgkomik.cc";
+const BASE_URL = "https://mgkomik.org";
 
 function generateRandomString(length: number): string {
     const charset = "HALOGaES.BCDFHIJKMNPQRTUVWXYZ.bcdefghijklmnopqrstuvwxyz0123456789";

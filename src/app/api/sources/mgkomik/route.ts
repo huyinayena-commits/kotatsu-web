@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
 // Mgkomik - Madara Theme Parser
-// Domain: id.mgkomik.cc
+// Domain: mgkomik.org (updated from id.mgkomik.cc)
 
-const BASE_URL = "https://id.mgkomik.cc";
+const BASE_URL = "https://mgkomik.org";
 const LIST_URL = `${BASE_URL}/komik/`;
 
 function getHeaders(): HeadersInit {
@@ -107,7 +107,7 @@ function parseAndRespond(html: string, page: number) {
 
             // Handle relative URLs
             if (cover && !cover.startsWith('http') && !cover.startsWith('data:')) {
-                cover = `https://id.mgkomik.cc${cover.startsWith('/') ? '' : '/'}${cover}`;
+                cover = `https://mgkomik.org${cover.startsWith('/') ? '' : '/'}${cover}`;
             }
 
             // Clean up cover URL (remove -175x238 etc size suffixes for original size)
