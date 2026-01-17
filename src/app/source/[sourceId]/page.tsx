@@ -486,8 +486,8 @@ export default function SourcePage() {
                                                     setShowSortMenu(false);
                                                 }}
                                                 className={`w-full px-4 py-2.5 text-left text-sm font-medium transition-colors ${sortBy === option
-                                                        ? 'bg-[var(--kotatsu-primary-container)] text-[var(--kotatsu-on-primary-container)]'
-                                                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
+                                                    ? 'bg-[var(--kotatsu-primary-container)] text-[var(--kotatsu-on-primary-container)]'
+                                                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
                                                     }`}
                                             >
                                                 {getSortLabel(option)}
@@ -568,8 +568,8 @@ export default function SourcePage() {
                                         key={type}
                                         onClick={() => toggleType(type)}
                                         className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-105 active:scale-95 ${selectedTypes.includes(type)
-                                                ? 'shadow-lg'
-                                                : 'hover:shadow-md'
+                                            ? 'shadow-lg'
+                                            : 'hover:shadow-md'
                                             }`}
                                         style={{
                                             background: selectedTypes.includes(type) ? 'var(--accent-primary)' : 'var(--bg-elevated)',
@@ -795,7 +795,7 @@ export default function SourcePage() {
             {/* Back to Top Button */}
             <button
                 onClick={scrollToTop}
-                className={`fixed bottom-24 lg:bottom-8 right-4 lg:right-6 w-12 h-12 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 z-50 hover:scale-110 active:scale-95 ${showBackToTop ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+                className={`fixed bottom-32 lg:bottom-8 right-4 lg:right-6 w-12 h-12 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 z-50 hover:scale-110 active:scale-95 ${showBackToTop ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
                     }`}
                 style={{
                     background: 'linear-gradient(135deg, var(--accent-primary), var(--kotatsu-secondary))',
