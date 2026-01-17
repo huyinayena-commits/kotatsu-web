@@ -26,7 +26,7 @@ export function ContinueReadingRow({ items }: ContinueReadingRowProps) {
                 </Link>
             </div>
 
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-px-4 px-4 -mx-4 snap-x snap-mandatory">
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth-touch scroll-px-4 px-4 -mx-4 snap-x snap-mandatory">
                 {items.slice(0, 6).map((item) => (
                     <Link
                         key={`${item.mangaId}-${item.source}`}

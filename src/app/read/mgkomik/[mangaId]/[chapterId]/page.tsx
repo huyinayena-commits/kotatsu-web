@@ -194,7 +194,7 @@ export default function MgkomikReaderPage() {
     }
 
     return (
-        <div className="min-h-screen" style={{ background: '#000' }}>
+        <div className="min-h-dvh" style={{ background: '#000' }}>
             <header className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : '-translate-y-full'}`}>
                 <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.9)', borderBottom: '1px solid var(--border-default)' }} onClick={(e) => e.stopPropagation()}>
                     <Link href={`/manga/mgkomik/${mangaId}`} className="p-2 rounded-lg hover:bg-white/10" style={{ color: 'var(--text-primary)' }}>
@@ -230,16 +230,16 @@ export default function MgkomikReaderPage() {
                 </main>
             )}
 
-            <footer className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : 'translate-y-full'}`} onClick={(e) => e.stopPropagation()}>
+            <footer className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : 'translate-y-full'}`} onClick={(e) => e.stopPropagation()} style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
                 <div className="px-4 py-3 flex items-center justify-between gap-3" style={{ background: 'rgba(0,0,0,0.9)', borderTop: '1px solid var(--border-default)' }}>
-                    <button onClick={() => goToChapter(chapter.prevChapterId)} disabled={!chapter.prevChapterId} className="flex-1 py-2.5 rounded-xl text-center disabled:opacity-40 flex items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
-                        <ChevronLeft size={16} /> Prev
+                    <button onClick={() => goToChapter(chapter.prevChapterId)} disabled={!chapter.prevChapterId} className="flex-1 py-3 rounded-xl text-center disabled:opacity-40 flex items-center justify-center gap-2 touch-target" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
+                        <ChevronLeft size={18} /> Prev
                     </button>
-                    <Link href={`/manga/mgkomik/${mangaId}`} className="py-2.5 px-4 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent-primary)', color: 'white' }}>
-                        <BookOpen size={20} />
+                    <Link href={`/manga/mgkomik/${mangaId}`} className="py-3 px-5 rounded-xl flex items-center justify-center touch-target" style={{ background: 'var(--accent-primary)', color: 'white' }}>
+                        <BookOpen size={22} />
                     </Link>
-                    <button onClick={() => goToChapter(chapter.nextChapterId)} disabled={!chapter.nextChapterId} className="flex-1 py-2.5 rounded-xl text-center disabled:opacity-40 flex items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
-                        Next <ChevronRight size={16} />
+                    <button onClick={() => goToChapter(chapter.nextChapterId)} disabled={!chapter.nextChapterId} className="flex-1 py-3 rounded-xl text-center disabled:opacity-40 flex items-center justify-center gap-2 touch-target" style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
+                        Next <ChevronRight size={18} />
                     </button>
                 </div>
             </footer>

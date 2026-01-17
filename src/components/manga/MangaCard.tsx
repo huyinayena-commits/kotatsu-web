@@ -151,13 +151,13 @@ const MangaCard = memo(function MangaCard({
                             e.stopPropagation();
                             onRemove();
                         }}
-                        className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 shadow-md"
+                        className="absolute top-2 right-2 w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 shadow-md touch-target-sm"
                         style={{
                             background: 'var(--accent-error)',
                             color: 'white',
                         }}
                     >
-                        <X size={14} />
+                        <X size={16} />
                     </button>
                 )}
             </Link>
@@ -253,12 +253,12 @@ const MangaCard = memo(function MangaCard({
                         e.stopPropagation();
                         onRemove();
                     }}
-                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-[var(--accent-error)] hover:text-white"
+                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-[var(--accent-error)] hover:text-white touch-target"
                     style={{
                         color: 'var(--text-muted)',
                     }}
                 >
-                    <X size={16} />
+                    <X size={18} />
                 </button>
             )}
         </Link>

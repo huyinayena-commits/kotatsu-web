@@ -345,7 +345,7 @@ export default function ReaderPage() {
 
     return (
         <div
-            className="min-h-screen relative"
+            className="min-h-dvh relative"
             style={{ background: '#000' }}
             {...bind()}
         >
@@ -433,6 +433,7 @@ export default function ReaderPage() {
             <footer
                 className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${showControls ? 'translate-y-0' : 'translate-y-full'}`}
                 onClick={(e) => e.stopPropagation()}
+                style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             >
                 <div
                     className="px-4 py-3 flex items-center justify-between gap-3"
@@ -441,10 +442,10 @@ export default function ReaderPage() {
                     <button
                         onClick={() => goToChapter(activeChapterData.info.prevChapterId)}
                         disabled={!activeChapterData.info.prevChapterId}
-                        className="flex-1 py-2.5 rounded-xl text-center transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                        className="flex-1 py-3 rounded-xl text-center transition-colors disabled:opacity-40 flex items-center justify-center gap-2 touch-target"
                         style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
                     >
-                        <ChevronLeft size={16} /> Prev
+                        <ChevronLeft size={18} /> Prev
                     </button>
 
                     <Link
@@ -458,10 +459,10 @@ export default function ReaderPage() {
                     <button
                         onClick={() => goToChapter(activeChapterData.info.nextChapterId)}
                         disabled={!activeChapterData.info.nextChapterId}
-                        className="flex-1 py-2.5 rounded-xl text-center transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                        className="flex-1 py-3 rounded-xl text-center transition-colors disabled:opacity-40 flex items-center justify-center gap-2 touch-target"
                         style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
                     >
-                        Next <ChevronRight size={16} />
+                        Next <ChevronRight size={18} />
                     </button>
                 </div>
             </footer>

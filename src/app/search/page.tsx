@@ -135,13 +135,13 @@ function SearchContent() {
     return (
         <>
             {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-lg bg-slate-900/80 border-b border-purple-500/20">
+            <header className="sticky top-0 z-50 backdrop-blur-lg border-b" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-default)' }}>
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center gap-4">
-                        <Link href="/" className="text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
+                        <Link href="/" className="flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: 'var(--accent-primary)' }}>
                             <ChevronLeft size={20} /> Kembali
                         </Link>
-                        <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
+                        <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                             Pencarian
                         </h1>
                     </div>
@@ -159,41 +159,44 @@ function SearchContent() {
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
                             placeholder="Cari manga... (contoh: One Piece, Naruto)"
-                            className="w-full px-6 py-4 pl-14 bg-slate-800/50 border border-slate-700 rounded-2xl 
-                                     text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 
-                                     focus:ring-2 focus:ring-purple-500/20 transition-all text-lg shadow-lg group-hover:shadow-purple-500/10"
+                            className="w-full px-6 py-4 pl-14 rounded-2xl text-lg shadow-lg focus:outline-none focus:ring-2 transition-all"
+                            style={{
+                                background: 'var(--bg-surface)',
+                                border: '1px solid var(--border-default)',
+                                color: 'var(--text-primary)',
+                            }}
                         />
-                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-400 transition-colors">
+                        <span className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors" style={{ color: 'var(--text-muted)' }}>
                             <Search size={24} />
                         </span>
                         {loading && (
-                            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-400">
+                            <span className="absolute right-5 top-1/2 -translate-y-1/2" style={{ color: 'var(--accent-primary)' }}>
                                 <Loader2 size={24} className="animate-spin" />
                             </span>
                         )}
                     </div>
-                    <p className="text-slate-500 text-sm mt-2 text-center">
+                    <p className="text-sm mt-2 text-center" style={{ color: 'var(--text-muted)' }}>
                         Ketik minimal 2 karakter, pencarian otomatis setelah 0.5 detik
                     </p>
                 </div>
 
                 {/* Results */}
                 {error && (
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center max-w-2xl mx-auto animate-scaleIn">
-                        <AlertCircle className="mx-auto mb-2 text-red-400" size={32} />
-                        <p className="text-red-400 font-medium">{error}</p>
+                    <div className="rounded-2xl p-6 text-center max-w-2xl mx-auto animate-scaleIn" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                        <AlertCircle className="mx-auto mb-2" size={32} style={{ color: 'var(--accent-error)' }} />
+                        <p className="font-medium" style={{ color: 'var(--accent-error)' }}>{error}</p>
                     </div>
                 )}
 
                 {!loading && searched && results.length === 0 && !error && (
                     <div className="text-center py-12 animate-fadeIn">
-                        <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mx-auto mb-4">
-                            <SearchX size={40} className="text-slate-500" />
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--bg-elevated)' }}>
+                            <SearchX size={40} style={{ color: 'var(--text-muted)' }} />
                         </div>
-                        <p className="text-slate-400 text-lg">
-                            Tidak ditemukan hasil untuk "<span className="text-purple-400">{query}</span>"
+                        <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                            Tidak ditemukan hasil untuk "<span style={{ color: 'var(--accent-primary)' }}>{query}</span>"
                         </p>
-                        <p className="text-slate-500 text-sm mt-2">
+                        <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
                             Coba kata kunci lain atau periksa ejaan
                         </p>
                     </div>
@@ -201,10 +204,10 @@ function SearchContent() {
 
                 {!searched && !loading && (
                     <div className="text-center py-12 animate-fadeIn">
-                        <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mx-auto mb-4">
-                            <BookOpen size={40} className="text-slate-500" />
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--bg-elevated)' }}>
+                            <BookOpen size={40} style={{ color: 'var(--text-muted)' }} />
                         </div>
-                        <p className="text-slate-400 text-lg">Ketik judul manga yang ingin dicari</p>
+                        <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Ketik judul manga yang ingin dicari</p>
                     </div>
                 )}
 
@@ -274,9 +277,9 @@ function SearchContent() {
             </main>
 
             {/* Footer */}
-            <footer className="border-t border-slate-800 py-6 mt-12 animate-fadeIn">
+            <footer className="border-t py-6 mt-12 animate-fadeIn" style={{ borderColor: 'var(--border-default)' }}>
                 <div className="container mx-auto px-4 text-center">
-                    <p className="text-slate-500 text-sm">
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                         Kotatsu Web Clone • Pencarian powered by Shinigami
                     </p>
                 </div>
@@ -295,7 +298,7 @@ function SearchLoading() {
 
 export default function SearchPage() {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="min-h-dvh" style={{ background: 'var(--bg-primary)' }}>
             <Suspense fallback={<SearchLoading />}>
                 <SearchContent />
             </Suspense>

@@ -624,9 +624,9 @@ export default function LibraryPage() {
                                                                                     : `${item.id}-${item.source}`
                                                                             );
                                                                         }}
-                                                                        className="p-1.5 bg-black/50 hover:bg-[var(--accent-primary)] text-white rounded-full backdrop-blur-sm transition-colors"
+                                                                        className="p-2.5 bg-black/50 hover:bg-[var(--accent-primary)] text-white rounded-full backdrop-blur-sm transition-colors touch-target-sm"
                                                                     >
-                                                                        <Folder size={14} />
+                                                                        <Folder size={16} />
                                                                     </button>
 
                                                                     {/* Dropdown Menu */}
@@ -673,9 +673,9 @@ export default function LibraryPage() {
                                                                         e.preventDefault();
                                                                         handleRemoveFromLibrary(item.id, item.source);
                                                                     }}
-                                                                    className="p-1.5 bg-black/50 hover:bg-[var(--accent-error)] text-white rounded-full backdrop-blur-sm transition-colors"
+                                                                    className="p-2.5 bg-black/50 hover:bg-[var(--accent-error)] text-white rounded-full backdrop-blur-sm transition-colors touch-target-sm"
                                                                 >
-                                                                    <Trash2 size={14} />
+                                                                    <Trash2 size={16} />
                                                                 </button>
                                                             </div>
 

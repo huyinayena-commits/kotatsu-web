@@ -88,6 +88,8 @@ export function HeroCarousel() {
             className="relative w-full h-[300px] md:h-[400px] lg:h-[450px] rounded-3xl overflow-hidden group mb-8 shadow-2xl ring-1 ring-white/10"
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
+            onTouchStart={() => setIsHovering(true)}
+            onTouchEnd={() => setTimeout(() => setIsHovering(false), 3000)}
         >
             {/* Slides */}
             {slides.map((slide, index) => (
@@ -177,18 +179,18 @@ export function HeroCarousel() {
             </div>
 
             {/* Pagination Indicators */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:left-10 md:translate-x-0 z-20 flex gap-1">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:left-10 md:translate-x-0 z-20 flex gap-2">
                 {slides.map((_, index) => (
                     <button
                         key={index}
                         onClick={() => setCurrentSlide(index)}
-                        className="p-2 -m-1 touch-manipulation"
+                        className="p-3 -m-1 touch-manipulation touch-target"
                         aria-label={`Go to slide ${index + 1}`}
                     >
                         <span
-                            className={`block transition-all duration-500 rounded-full h-1.5 ${index === currentSlide
-                                ? 'w-8 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]'
-                                : 'w-2 bg-white/30'
+                            className={`block transition-all duration-500 rounded-full h-2 ${index === currentSlide
+                                ? 'w-10 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]'
+                                : 'w-2.5 bg-white/30'
                                 }`}
                         />
                     </button>

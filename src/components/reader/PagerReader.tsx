@@ -99,7 +99,7 @@ export default function PagerReader({
     return (
         <div
             ref={containerRef}
-            className="h-screen w-full flex items-center justify-center overflow-hidden select-none"
+            className="h-dvh w-full flex items-center justify-center overflow-hidden select-none"
             style={{ background: '#000' }}
             onClick={handleClick}
             onTouchStart={handleTouchStart}
@@ -120,7 +120,7 @@ export default function PagerReader({
                     key={currentPage}
                     src={currentPageData?.url}
                     alt={`Page ${currentPage + 1}`}
-                    className="max-h-screen max-w-full object-contain transition-opacity"
+                    className="max-h-[100dvh] max-w-full object-contain transition-opacity"
                     style={{ opacity: imageLoaded ? 1 : 0 }}
                     onLoad={() => setImageLoaded(true)}
                     onError={(e) => {
@@ -138,31 +138,34 @@ export default function PagerReader({
                 </div>
             </div>
 
-            {/* Navigation Indicators */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 pointer-events-none">
+            {/* Navigation Indicators - Safe area aware */}
+            <div
+                className="absolute left-0 right-0 flex justify-center gap-2 sm:gap-4 pointer-events-none px-4"
+                style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
+            >
                 <span
-                    className="px-3 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm"
+                    className="px-3 py-2 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm touch-target-sm"
                     style={{
                         background: 'rgba(0,0,0,0.8)',
                         color: currentPage > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
                     }}
                 >
-                    <ChevronLeft size={12} /> Prev
+                    <ChevronLeft size={14} /> Prev
                 </span>
                 <span
-                    className="px-3 py-1 rounded-full text-xs backdrop-blur-sm"
+                    className="px-4 py-2 rounded-full text-xs backdrop-blur-sm font-medium"
                     style={{ background: 'rgba(0,0,0,0.8)', color: 'var(--text-primary)' }}
                 >
                     {currentPage + 1} / {pages.length}
                 </span>
                 <span
-                    className="px-3 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm"
+                    className="px-3 py-2 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm touch-target-sm"
                     style={{
                         background: 'rgba(0,0,0,0.8)',
                         color: currentPage < pages.length - 1 ? 'var(--text-primary)' : 'var(--text-muted)',
                     }}
                 >
-                    Next <ChevronRight size={12} />
+                    Next <ChevronRight size={14} />
                 </span>
             </div>
         </div>
